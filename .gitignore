@@ -88,3 +88,12 @@ sw.*
 
 # Vim swap files
 *.swp
+
+# Uploads directory
+uploads
+
+# Mlaunch data
+data
+
+#leveldb data
+my-db

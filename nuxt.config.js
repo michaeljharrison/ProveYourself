@@ -12,13 +12,13 @@ export default {
   },
 
   // Global CSS: https://go.nuxtjs.dev/config-css
-  css: ['ant-design-vue/dist/antd.css'],
+  css: ['ant-design-vue/dist/antd.css', '@/assets/style/main.scss'],
 
   // Server Middleware
   serverMiddleware: [{ path: '/api', handler: '~/server-middleware/rest.ts' }],
 
   // Plugins to run before rendering page: https://go.nuxtjs.dev/config-plugins
-  plugins: ['@/plugins/antd-ui'],
+  plugins: ['@/plugins/antd-ui', '@/plugins/vue-json-pretty'],
 
   // Env Variables (shared across back and front end)
   env: {
@@ -65,5 +65,18 @@ export default {
   content: {},
 
   // Build Configuration: https://go.nuxtjs.dev/config-build
-  build: {},
+  build: {
+    loaders: {
+      less: {
+        lessOptions: {
+          javascriptEnabled: true,
+          math: 'always',
+        },
+      },
+    },
+    // eslint-disable-next-line @typescript-eslint/no-unused-vars
+    extend(config, { loaders: { less } }) {
+      less.javascriptEnabled = true
+    },
+  },
 }

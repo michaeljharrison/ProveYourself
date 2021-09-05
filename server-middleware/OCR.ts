@@ -14,16 +14,6 @@ const ApiKeyCredentials = require('@azure/ms-rest-js').ApiKeyCredentials;
 // const multiLingualTextURL = 'https://raw.githubusercontent.com/Azure-Samples/cognitive-services-sample-data-files/master/ComputerVision/Images/MultiLingual.png';
 // const mixedMultiPagePDFURL = 'https://raw.githubusercontent.com/Azure-Samples/cognitive-services-sample-data-files/master/ComputerVision/Images/MultiPageHandwrittenForm.pdf';
 
-
-
-type Line = {
-  words: any
-}
-
-type ReadResult = {
-  lines: Array<Line>
-}
-
 // Status strings returned from Read API. NOTE: CASING IS SIGNIFICANT.
 // Before Read 3.0, these are "Succeeded" and "Failed"
 const STATUS_SUCCEEDED = "succeeded";
@@ -104,7 +94,7 @@ async function readTextFromFile(client: any, filePath: string) {
 }
 
 // Prints all text from Read result
-function printRecText(readResults: Array<ReadResult>) {
+function printRecText(readResults: Array<any>) {
   console.log('Recognized text:');
   for (const page in readResults) {
     if (readResults.length > 1) {
@@ -139,6 +129,7 @@ export async function computerVisionFromFile(filePath: any) {
        // Call API, returns a Promise<Models.readInStreamResponse>
     const printedResult = await readTextFromFile(computerVisionClient, filePath);
     printRecText(printedResult);
+    
     return printedResult;
   } catch(error) {
     return error;

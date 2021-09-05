@@ -6,7 +6,7 @@ import { v4 as uuidv4 } from 'uuid';
 // eslint-disable-next-line
 import colors from 'colors';
 import { POI, POI_STATUS, Verification } from '../store/types';
-import {computerVisionFromURL, computerVisionFromFile} from './OCR'
+import {computerVisionFromFile} from './OCR'
 import {create, get, update} from './db'
 import { checkUpload } from './poi';
 import { anchorPOI } from './pdb';
@@ -18,7 +18,6 @@ const bodyParser = require("body-parser");
 const express = require('express')
 const multer  =   require('multer');  
 const upload = multer({ dest: 'uploads/' })
-const printedTextSampleURL = 'https://moderatorsampleimages.blob.core.windows.net/samples/sample2.jpg';
 const unlinkAsync = promisify(fs.unlink)
 // Logging
 const WINSTON_FORMAT = winston.format.combine(
@@ -127,7 +126,7 @@ app.post('/upload/:code', upload.single('file'), async (req: any, res: any) => {
         // TODO Check for a specific document number.
 
         // TODO Australia Post Drivers API real.
-        
+
         // Verify OCR Data for code.
         const verificationResult: Verification = await checkUpload(poi, ocrResult[0]);
         LOGGER.debug({message: 'Verification Result', verificationResult})
