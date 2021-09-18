@@ -17,7 +17,7 @@
           @change="changeCode"
         />
         <a-button type="primary"
-          ><NuxtLink :to="'/upload?code=' + code">New POI </NuxtLink>
+          ><NuxtLink :to="'/create'">New POI </NuxtLink>
         </a-button>
         <a-button type="primary"
           ><NuxtLink :to="'/verify?code=' + code">View Proof</NuxtLink>
@@ -68,7 +68,7 @@
   </main>
 </template>
 
-<script lang="js">
+<script lang="ts">
 import moment from 'moment'
 import 'moment/locale/en-au'
 import Preview from '~/components/Preview.vue'
@@ -88,6 +88,7 @@ export default {
       poi: null,
       notFound: false,
       code: null,
+      // @ts-ignore
       form: this.$form.createForm(this, { name: 'dynamic_rule' }),
       moment,
       result: null,

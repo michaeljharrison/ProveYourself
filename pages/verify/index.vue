@@ -1,212 +1,250 @@
 <template>
   <main :style="{ 'overflow-x': hidden }">
-    <h1>Verify</h1>
-    <br />
+    <div class="header">
+      <h1>Verify</h1>
+      <p>{{ constants.COPY.VERIFYING.DESCRIPTION }}</p>
+      <br />
+    </div>
     <div v-if="loading" class="loading">
       <a-spin size="large" tip="Loading, please wait..."></a-spin>
     </div>
-    <a-result
-      v-else-if="poi && poi.status === 'FAILED'"
-      status="500"
-      title="Not Verified"
-      sub-title="This POI has been uploaded but failed verification, try uploading a new image for this POI."
-    >
-      <template #extra>
-        <a-input
-          :default-value="code"
-          placeholder="XXXXXXXX-XXXX-XXXX-XXXX-XXXXXXXXXXXXX"
-          @change="changeCode"
-        />
-        <a-form :form="form" layout="inline">
-          <a-form-item>
-            <a-button type="primary"
-              ><NuxtLink :to="'/upload?code=' + code">Upload Again </NuxtLink>
-            </a-button>
-          </a-form-item>
-          <a-form-item>
-            <a-button type="primary"
-              ><NuxtLink :to="'/verify?code=' + code">Change Code</NuxtLink>
-            </a-button>
-          </a-form-item>
-        </a-form>
-      </template>
-    </a-result>
-    <a-result
-      v-else-if="poi && poi.status === 'VERIFIED'"
-      status="success"
-      title="Verified"
-      sub-title="This POI has been uploaded and verified, see details below."
-    >
-      <template #extra>
-        <a-input
-          :default-value="code"
-          placeholder="XXXXXXXX-XXXX-XXXX-XXXX-XXXXXXXXXXXXX"
-          @change="changeCode"
-        />
-        <a-form :form="form" layout="inline">
-          <a-form-item>
-            <a-button type="primary"
-              ><NuxtLink :to="'/create'">New POI </NuxtLink>
-            </a-button>
-          </a-form-item>
-          <a-form-item>
-            <a-button type="primary"
-              ><a :href="'/verify?code=' + code">Check</a>
-            </a-button>
-          </a-form-item>
-          <!--  
-           TODO Allow users to download the proof.
+    <div v-else class="body">
+      <a-result
+        v-if="poi && poi.status === 'FAILED'"
+        status="500"
+        title="Not Verified"
+        sub-title="This POI has been uploaded but failed verification, try uploading a new image for this POI."
+      >
+        <template #extra>
+          <a-input
+            :default-value="code"
+            placeholder="XXXXXXXX-XXXX-XXXX-XXXX-XXXXXXXXXXXXX"
+            @change="changeCode"
+          />
+          <a-form :form="form" layout="inline">
+            <a-form-item>
+              <a-button type="primary"
+                ><NuxtLink :to="'/upload?code=' + code">Upload Again </NuxtLink>
+              </a-button>
+            </a-form-item>
+            <a-form-item>
+              <a-button type="primary"
+                ><NuxtLink :to="'/verify?code=' + code">Change Code</NuxtLink>
+              </a-button>
+            </a-form-item>
+          </a-form>
+        </template>
+      </a-result>
+      <a-result
+        v-else-if="poi && poi.status === 'VERIFIED'"
+        status="success"
+        title="Verified"
+        sub-title="This POI has been uploaded and verified, see details below."
+      >
+        <template #extra class="extra">
+          <div class="top">
+            <a-input
+              :default-value="code"
+              placeholder="XXXXXXXX-XXXX-XXXX-XXXX-XXXXXXXXXXXXX"
+              @change="changeCode"
+            />
+            <a-form :form="form" layout="inline">
+              <a-form-item>
+                <a-button type="primary"
+                  ><NuxtLink :to="'/create'">New POI </NuxtLink>
+                </a-button>
+              </a-form-item>
+              <a-form-item>
+                <a-button type="primary"
+                  ><a :href="'/verify?code=' + code">Check</a>
+                </a-button>
+              </a-form-item>
+              <!--  
+            TODO Allow users to download the proof.
            <a-form-item>
             <a-button type="primary"
               ><NuxtLink :to="'/create'">Download</NuxtLink>
             </a-button>
           </a-form-item> -->
-        </a-form>
-        <br />
-        <br />
-        <h2>Proof</h2>
-        <a-tabs default-active-key="1" tab-position="top">
-          <a-tab-pane key="1" tab="Info">
-            <div class="stats">
-              <div class="stat">
-                <h4>Status</h4>
-                <a-progress
-                  status="active"
-                  type="circle"
-                  :percent="100"
-                  :format="() => 'Verified'"
-                />
-              </div>
-              <div class="stat">
-                <a-statistic
-                  title="Created On"
-                  :value="moment(poi.createdOn).format('DD MMM YYYY')"
-                  style="margin-right: 50px"
-                />
-                <a-statistic
-                  title="Verified On"
-                  :value="moment(poi.verifiedOn).format('DD MMM YYYY')"
-                />
-              </div>
-              <div class="stat">
-                <a-statistic
-                  title="Block Time"
-                  :value="poi.requestProof.proof.metadata.blockTime.toString()"
-                  style="margin-right: 50px"
-                />
-              </div>
-              <div class="stat">
-                <h4>Confidence</h4>
-                <a-progress
-                  status="active"
-                  type="circle"
-                  :stroke-color="{
-                    '0%': '#108ee9',
-                    '100%': '#87d068',
-                  }"
-                  :percent="
-                    Number.parseFloat(
-                      poi.verification.verifiedConfidence * 100
-                    ).toFixed(2)
-                  "
-                />
-              </div>
-              <div class="stat">
-                <a-statistic
-                  title="Anchored On"
-                  :value="poi.blockchain"
-                  style="margin-right: 50px"
-                />
-              </div>
-              <div class="stat">
-                <a-statistic
-                  title="Found On Line"
-                  :value="poi.verification.lineFound + 1"
-                  style="margin-right: 50px"
-                />
-                <a-statistic
-                  title="Word"
-                  :value="poi.verification.wordFound + 1"
-                />
-              </div>
-              <div class="stat">
-                <a-statistic
-                  title="Name"
-                  :value="poi.name"
-                  style="margin-right: 50px"
-                />
-                <a-statistic title="Email" :value="poi.email" />
-              </div>
+            </a-form>
+            <br />
+            <br />
+          </div>
+          <div class="bottom">
+            <div class="left">
+              <h2>Uploaded Image</h2>
+              <img
+                v-if="poi && poi.file && poi.file.binaryData"
+                :src="
+                  'data:image/png;base64,' +
+                  poi.file.binaryData.toString('base64')
+                "
+              />
+              <a-skeleton v-else></a-skeleton>
             </div>
-          </a-tab-pane>
+            <div class="right">
+              <h2>Proof</h2>
+              <a-tabs default-active-key="2" tab-position="top">
+                <a-tab-pane key="1" tab="Info">
+                  <div class="stats">
+                    <div class="stat">
+                      <h4>Status</h4>
+                      <a-progress
+                        status="active"
+                        type="circle"
+                        :percent="100"
+                        :format="() => 'Verified'"
+                      />
+                    </div>
+                    <div class="stat">
+                      <a-statistic
+                        title="Created On"
+                        :value="moment(poi.createdOn).format('DD MMM YYYY')"
+                        style="margin-right: 50px"
+                      />
+                      <a-statistic
+                        title="Verified On"
+                        :value="moment(poi.verifiedOn).format('DD MMM YYYY')"
+                      />
+                    </div>
+                    <div class="stat">
+                      <a-statistic
+                        title="Block Time"
+                        :value="
+                          poi.requestProof.proof.metadata.blockTime.toString()
+                        "
+                        style="margin-right: 50px"
+                      />
+                    </div>
+                    <div class="stat">
+                      <h4>Confidence</h4>
+                      <a-progress
+                        status="active"
+                        type="circle"
+                        :stroke-color="{
+                          '0%': '#108ee9',
+                          '100%': '#87d068',
+                        }"
+                        :percent="
+                          Number.parseFloat(
+                            poi.verification.verifiedConfidence * 100
+                          ).toFixed(2)
+                        "
+                      />
+                    </div>
+                    <div class="stat">
+                      <a-statistic
+                        title="Anchored On"
+                        :value="poi.blockchain"
+                        style="margin-right: 50px"
+                      />
+                    </div>
+                    <div class="stat">
+                      <a-statistic
+                        title="Found On Line"
+                        :value="poi.verification.lineFound + 1"
+                        style="margin-right: 50px"
+                      />
+                      <a-statistic
+                        title="Word"
+                        :value="poi.verification.wordFound + 1"
+                      />
+                    </div>
+                    <div class="stat">
+                      <a-statistic
+                        title="Name"
+                        :value="poi.name"
+                        style="margin-right: 50px"
+                      />
+                      <a-statistic title="Email" :value="poi.email" />
+                    </div>
+                  </div>
+                </a-tab-pane>
 
-          <a-tab-pane key="2" tab="Certificate (Coming Soon)" disabled>
-            <a-skeleton />
-          </a-tab-pane>
-          <a-tab-pane key="3" tab="JSON">
-            <VueJsonPretty :data="poi" show-length></VueJsonPretty
-          ></a-tab-pane>
-        </a-tabs>
-      </template>
-    </a-result>
-    <a-result
-      v-else-if="notFound"
-      status="404"
-      title="404"
-      sub-title="Sorry, no active request found with that code."
-    >
-      <template #extra>
-        <a-input
-          :default-value="code"
-          placeholder="XXXXXXXX-XXXX-XXXX-XXXX-XXXXXXXXXXXXX"
-          @change="changeCode"
-        />
-        <a-button type="primary"
-          ><a :href="'/verify?code=' + code">Check</a>
-        </a-button>
-      </template>
-    </a-result>
-    <a-result
-      v-else-if="poi"
-      status="warning"
-      title="Awaiting Upload"
-      sub-title="Sorry, no POI has been uploaded for that request yet!"
-    >
-      <template #extra>
-        <a-input
-          :default-value="code"
-          placeholder="XXXXXXXX-XXXX-XXXX-XXXX-XXXXXXXXXXXXX"
-          @change="changeCode"
-        />
-        <a-button type="primary"
-          ><NuxtLink :to="'/upload?code=' + code">Go to Upload</NuxtLink>
-        </a-button>
-      </template>
-    </a-result>
-    <a-result
-      v-else
-      title="Please Enter a Request Code"
-      sub-title="Please enter the request code for your Identity Proof, alternatively, follow the hyperlink provided to you."
-    >
-      <template #extra>
-        <a-input
-          :default-value="code"
-          placeholder="XXXXXXXX-XXXX-XXXX-XXXX-XXXXXXXXXXXXX"
-          @change="changeCode"
-        />
-        <a-button type="primary"
-          ><a :href="'/verify?code=' + code">Check</a>
-        </a-button>
-      </template>
-    </a-result>
+                <a-tab-pane key="2" tab="Certificate">
+                  <div class="iframeContainer">
+                    <iframe
+                      title="proofIFrame"
+                      :src="`/api/certificate/${poi.code}#view=fitH`"
+                      type="application/pdf"
+                      width="100%"
+                      height="100%"
+                    />
+                  </div>
+                </a-tab-pane>
+                <a-tab-pane key="3" tab="JSON">
+                  <VueJsonPretty
+                    :deep="2"
+                    :data="poi"
+                    show-length
+                  ></VueJsonPretty
+                ></a-tab-pane>
+              </a-tabs>
+            </div>
+          </div>
+        </template>
+      </a-result>
+      <a-result
+        v-else-if="notFound"
+        status="404"
+        title="404"
+        sub-title="Sorry, no active request found with that code."
+      >
+        <template #extra>
+          <a-input
+            :default-value="code"
+            placeholder="XXXXXXXX-XXXX-XXXX-XXXX-XXXXXXXXXXXXX"
+            @change="changeCode"
+          />
+          <a-button type="primary"
+            ><a :href="'/verify?code=' + code">Refresh</a>
+          </a-button>
+        </template>
+      </a-result>
+      <a-result
+        v-else-if="poi"
+        status="warning"
+        title="Awaiting Upload"
+        sub-title="Sorry, no POI has been uploaded for that request yet!"
+      >
+        <template #extra>
+          <a-input
+            :default-value="code"
+            placeholder="XXXXXXXX-XXXX-XXXX-XXXX-XXXXXXXXXXXXX"
+            @change="changeCode"
+          />
+          <a-button type="primary"
+            ><NuxtLink :to="'/upload?code=' + code">Go to Upload</NuxtLink>
+          </a-button>
+        </template>
+      </a-result>
+      <a-result
+        v-else
+        title="Please Enter a Request Code"
+        sub-title="Please enter the request code for your Identity Proof, alternatively, follow the hyperlink provided to you."
+      >
+        <template #extra>
+          <a-input
+            :default-value="code"
+            placeholder="XXXXXXXX-XXXX-XXXX-XXXX-XXXXXXXXXXXXX"
+            @change="changeCode"
+          />
+          <a-button type="primary"
+            ><a :href="'/verify?code=' + code">Check</a>
+          </a-button>
+        </template>
+      </a-result>
+    </div>
   </main>
 </template>
 
-<script lang="js">
+<script lang="ts">
 import moment from 'moment'
 import 'moment/locale/en-au'
 import VueJsonPretty from 'vue-json-pretty'
 import 'vue-json-pretty/lib/styles.css'
+import { mapState } from 'vuex'
+import constants from '@/store/constants'
 export default {
   components: { VueJsonPretty },
   layout: 'default',
@@ -217,10 +255,12 @@ export default {
         authorization: 'sharedSecret',
       },
       loading: true,
+      constants,
       fileList: [],
       poi: null,
       notFound: false,
       code: null,
+      // @ts-ignore
       form: this.$form.createForm(this, { name: 'dynamic_rule' }),
       moment,
       result: null,
@@ -231,7 +271,10 @@ export default {
     this.loading = true
     this.error = this.post = null
     vm.loading = true
-    const fetchedCode = this.$route.query.code
+    let fetchedCode = this.$route.query.code
+    if ((!fetchedCode || fetchedCode.length <= 0) && this.currentPOI) {
+      fetchedCode = this.currentPOI.code
+    }
     // replace `getPost` with your data fetching util / API wrapper
     try {
       const poi = await this.$store.dispatch('ACTION_fetchPOI', {
@@ -255,13 +298,17 @@ export default {
   },
   fetchOnServer: false,
   fetchKey: 'upload',
-  computed: {},
+  computed: mapState(['currentPOI']),
   created() {
     this.$fetch()
+  },
+  mounted() {
+    this.$store.commit('SET_stateVerifying')
   },
   methods: {
     changeCode(e: Event) {
       e.preventDefault()
+      // @ts-ignore
       this.code = e.target.value
     },
     cancel(e: Event) {
@@ -281,6 +328,33 @@ export default {
 </script>
 
 <style lang="scss" scoped>
+.bottom {
+  display: flex;
+  flex-direction: row;
+  justify-content: space-between;
+  margin-bottom: 20px;
+}
+.left,
+.right {
+  display: flex;
+  flex-direction: column;
+  max-width: 45vw;
+  flex-grow: 1;
+  max-width: 50%;
+  width: 50%;
+}
+.left {
+  padding-right: 10px;
+  h2 {
+    margin-bottom: 70px;
+  }
+}
+.right {
+  padding-left: 10px;
+}
+h2 {
+  border-bottom: 1px solid rgba(0, 0, 0, 0.1);
+}
 .ant-layout-content {
   main {
     overflow-x: hidden;
@@ -333,5 +407,25 @@ export default {
   display: flex;
   flex-direction: column;
   margin-right: 0px !important;
+}
+.iframeContainer {
+  height: 100vh;
+}
+p {
+  text-align: center;
+}
+.top {
+  margin-left: auto;
+  margin-right: auto;
+  max-width: 1280px;
+}
+.body {
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+}
+
+img {
+  border-radius: 0.75em;
 }
 </style>

@@ -28,15 +28,22 @@ export const mutations = {
   },
   SET_stateCreating(state: vuexState, poi: POI) {
     state.currentState = CONSTANTS.STATE.CREATING
-    state.currentPOI = poi;
+    if(poi) {
+      state.currentPOI = poi;
+    }
+    
   },
   SET_stateUploading(state: vuexState, poi: POI) {
     state.currentState = CONSTANTS.STATE.UPLOADING
-    state.currentPOI = poi;
+    if(poi) {
+      state.currentPOI = poi;
+    }
   },
   SET_stateVerifying(state: vuexState, poi: POI) {
     state.currentState = CONSTANTS.STATE.VERIFYING
-    state.currentPOI = poi;
+    if(poi) {
+      state.currentPOI = poi;
+    }
   },
 }
 
@@ -57,7 +64,9 @@ export const actions = {
   ) {
     const {code} = options;
     const fetchResponse = await this.$axios.$post('/api/get', {code});
-    commit('SET_stateUploading', fetchResponse)
+    commit('SET_request', fetchResponse)
+    state.currentPOI = fetchResponse
+    // commit('SET_stateUploading', fetchResponse)
     return fetchResponse;
   }
 }

@@ -1,9 +1,13 @@
 import { anchor, merkle } from "provendb-sdk-node";
 import { POI } from "../store/types";
+const fs = require('fs');
+const crypto = require('crypto');
 const winston = require('winston');
+const axios = require('axios').default;
 const _ = require('lodash');
 // Create a new anchor client using your credentials
 const client = anchor.connect(anchor.withCredentials(process.env.PROVENDB_SDK_KEY || "sdk_key"));
+const COMP_VAULT_KEY = process.env.PROVENDB_COMP_VAULT_KEY || "cv_key"
 const WINSTON_FORMAT = winston.format.combine(
   winston.format.colorize({ all: true }),
   winston.format.timestamp(),
@@ -26,9 +30,7 @@ const LOGGER = winston.createLogger({
     ]
 });
 
-// TODO This function should probably just be part of the SDK.
 function buildTree(path: string, object: Object, builder: merkle.Builder) {
-  LOGGER.debug({message: 'Building Tree for Object', object})
   _.forOwn(object, (value, key) => {
     if(_.isObject(value) && Object.keys(value).length > 0 ) {
       // Value is an object with keys, recursively build object.
@@ -39,6 +41,33 @@ function buildTree(path: string, object: Object, builder: merkle.Builder) {
     }
   })
   return builder;
+}
+
+export function hashImage(filePath: string) {
+  const fileBuffer = fs.readFileSync(filePath);
+  const hashSum = crypto.createHash('sha256');
+  hashSum.update(fileBuffer);
+  return hashSum.digest('hex');
+}
+
+export async function getCertificate(rowProof: any, rowData: any) {
+  const config = {
+    method: 'post',
+    url: 'https://api.dev.provendocs.com/api/getCertificate/',
+    responseType: 'stream',
+    headers: { 
+      'Authorization': COMP_VAULT_KEY,
+    },
+    data: {rowProof, rowData}
+  };
+    
+  try {
+    const response = await axios(config);
+    return response;
+  } catch(e) {
+    LOGGER.error({message: 'CV Cert Request Failed', error: e.toString() })
+    return e;
+  }
 }
 
 export async function anchorPOI(poi: POI) {

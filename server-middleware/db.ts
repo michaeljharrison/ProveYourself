@@ -54,9 +54,9 @@ export async function create(code: string, request: POI) {
   return request;
 };
 
-export async function update(code: string, verification: Verification, verificationProof: any) {
+export async function update(code: string, verification: Verification, verificationProof: any, file: any) {
   const requests = database.collection('requests');
-  await requests.updateOne({code}, {$set: {status: verification.verified , verification, verifiedOn: new Date(), verificationProof}});
+  await requests.updateOne({code}, {$set: {status: verification.verified , verification, verifiedOn: new Date(), verificationProof, file}});
   return true;
 };
 

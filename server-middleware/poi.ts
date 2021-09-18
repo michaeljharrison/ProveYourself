@@ -3,7 +3,7 @@ import { POI, POI_STATUS, Verification } from "../store/types";
 
 
 export function checkUpload(poi: POI, ocrResult: ReadResult) : Verification{
-  const {code} = poi;
+  const verificationCode = poi.requestProof.proof.metadata.txnId.substring(0, 20)
   const {lines} = ocrResult;
   let verified = POI_STATUS.FAILED;
   let verifiedConfidence = 0;
@@ -14,7 +14,7 @@ export function checkUpload(poi: POI, ocrResult: ReadResult) : Verification{
     // Iterate through each word on that line.
     const {words} = line;
     words.forEach((word, wordNumber) => {
-      if(word.text === code) {
+      if(word.text === verificationCode) {
         verified = POI_STATUS.VERIFIED;
         verifiedConfidence = word.confidence
         lineFound = lineNumber;

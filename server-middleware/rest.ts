@@ -9,7 +9,7 @@ import { POI, POI_STATUS, Verification } from '../store/types';
 import {computerVisionFromFile} from './OCR'
 import {create, get, update} from './db'
 import { checkUpload } from './poi';
-import { anchorPOI } from './pdb';
+import { anchorPOI, getCertificate, hashImage } from './pdb';
 const { promisify } = require('util')
 const fs = require('fs')
 const expressWinston = require('express-winston');
@@ -101,10 +101,13 @@ app.post('/get', async (req: any, res: any) => {
 
 app.post('/upload/:code', upload.single('file'), async (req: any, res: any) => {
   // TODO Steganography embed information within the image.
+  // TODO WATERMARK WITH LOWER BOUND
   try {
     const {params} = req;
     const {file} = req;
     const {code} = params;
+    
+
     if(!code) {
       res.status(404).send({ok: 0, error: '404: Please provide a code along with the upload.'})
     } else {
@@ -113,17 +116,18 @@ app.post('/upload/:code', upload.single('file'), async (req: any, res: any) => {
       if(!poi) {
         res.status(404).send({ok: 0, error: '404: No POI request for that code was found.'})
       } else {
-        // Get File Path.
+        // Get File Path and file Hash.
         const filePath = path.join(__dirname, '..', 'uploads', file.filename);
-        LOGGER.debug({message: 'Uploading File', poi, file, filePath})
+        const fileData = {name: file.originalname, mimetype: file.mimetype, encoding: file.encoding, size: file.size, hash: hashImage(filePath)};
+        LOGGER.debug({message: 'Uploading File', poi, fileData, filePath})
 
         // Run OCR over file.
         const ocrResult = await computerVisionFromFile(filePath)
-        LOGGER.debug({message: 'OCR Result', ocrResult})
+        // LOGGER.debug({message: 'OCR Result', ocrResult})
 
         // TODO Add a new stage for facial recognition, make sure it's a photo of a person.
 
-        // TODO Check for a specific document number.
+        // TODO Check for a specific document number (EG License Number)
 
         // TODO Australia Post Drivers API real.
 
@@ -131,14 +135,29 @@ app.post('/upload/:code', upload.single('file'), async (req: any, res: any) => {
         const verificationResult: Verification = await checkUpload(poi, ocrResult[0]);
         LOGGER.debug({message: 'Verification Result', verificationResult})
 
-        // SubmitProof
+        // Don't bother proving if the verification fails.
+        if(verificationResult.verified === "FAILED") {
+          const writeResult = await update(code, verificationResult, {}, fileData)
+          LOGGER.debug({message: 'Update Result', writeResult})
+          res.status(406).send(verificationResult);
+          return;
+        }
+
+        // Clean up POI data before submitting proof.
+        poi.status = verificationResult.verified;
+        poi.verification = verificationResult;
+        poi.file = fileData;
+        // Add a binary representation of the image to mongodb.
+        poi.file.binaryData = fs.readFileSync(filePath);
         delete poi._id;
+
+        // Submit Proof.
         LOGGER.debug({message:'Creating proof for verification poi', poi });
         const proofResult = await anchorPOI(poi)
         LOGGER.debug({message:'Result of anchor verification proof', poi, proofResult });
 
         // Update DB
-        const writeResult = await update(code, verificationResult, proofResult )
+        const writeResult = await update(code, verificationResult, proofResult, fileData)
         LOGGER.debug({message: 'Update Result', writeResult})
 
         // Clean File
@@ -153,4 +172,60 @@ app.post('/upload/:code', upload.single('file'), async (req: any, res: any) => {
     res.status(500).send({ok: 0, error: error.toString()})
   }
 })
+
+app.get('/certificate/:code', async (req: any, res: any) => {
+
+  const {params} = req;
+  const {code} = params;
+  LOGGER.debug({message:'Fetching POI for code', params });
+  const poi: POI = await get(code);
+
+  // First, fetch the certificate from the Compliance Vault API
+  try {
+    LOGGER.debug({message:'Fetching cert for poi', request: {rowProof: poi.verificationProof.proof, rowData: {key: poi.file.name, hash: poi.file.hash}} });
+
+    const response = await getCertificate(poi.verificationProof.proof, {key: poi.file.name, hash: poi.file.hash})
+    if(response.status !== 200 || !response) {
+      LOGGER.error({message:'Error creating PDF for POI', result: response.toString()});
+      res.status(500).send(response);
+      return;
+    }
+
+    response.data.pipe(res);
+    
+  } catch (e) {
+    console.error(e);
+    LOGGER.error({message:'Error fetching PDF', error: e.toString()});
+    res.status(500).send(e);
+  }
+
+
+
+})
+
+app.get('/image/:code', async (req: any, res: any) => {
+
+  const {params} = req;
+  const {code} = params;
+  LOGGER.debug({message:'Fetching POI for code', params });
+  const poi: POI = await get(code);
+
+  // First, fetch the certificate from the Compliance Vault API
+  try {
+    // Get the binary data from the POI.
+    const {file} = poi;
+    const {binaryData} = file;
+    LOGGER.debug({message:'Returning Image Preview', file, length: binaryData.length });
+    const data = `data:image/png;base64,${binaryData.toString('base64')}`
+    res.status(200).send(data)
+  } catch (e) {
+    console.error(e);
+    LOGGER.error({message:'Error fetching upload preview', error: e.toString()});
+    res.status(500).send(e);
+  }
+
+
+
+})
+
 module.exports = app

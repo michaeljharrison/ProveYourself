@@ -28,7 +28,8 @@ export interface POI {
   verification: Verification
   createdOn: Date,
   verifiedOn: Date,
-  initialProof: any,
+  requestProof: any,
   verificationProof: any,
+  file: any,
 
 }
