@@ -53,7 +53,7 @@ export const actions = {
     options: { request: POIRequest; }
   ) {
     const {request} = options;
-    console.log(request);
+    // console.log(request);
     const createResponse = await this.$axios.$post('/api/create', request);
     commit('SET_stateUploading', createResponse)
     return createResponse;

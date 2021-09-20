@@ -61,7 +61,6 @@ export async function update(code: string, verification: Verification, verificat
 };
 
 export async function get(code: string) {
-  console.log(code);
   const requests = database.collection('requests');
   const request = await requests.findOne({code});
   return request;

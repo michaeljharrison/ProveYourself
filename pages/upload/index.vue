@@ -295,7 +295,7 @@ export default {
       this.licenceAddress = event.target.value
     },
     handleChange(info) {
-      console.log(info)
+      // console.log(info)
       if (info.file.status === 'uploading') {
         this.verified = true
         if (this.loadingMessage) {

@@ -12,6 +12,7 @@ import { checkUpload } from './poi';
 import { anchorPOI, getCertificate, hashImage } from './pdb';
 const { promisify } = require('util')
 const fs = require('fs')
+const JSZip = require('jszip')
 const expressWinston = require('express-winston');
 const winston = require('winston');
 const bodyParser = require("body-parser");
@@ -223,9 +224,54 @@ app.get('/image/:code', async (req: any, res: any) => {
     LOGGER.error({message:'Error fetching upload preview', error: e.toString()});
     res.status(500).send(e);
   }
+})
+
+app.get('/download/:code', async (req: any, res: any) => {
+  const {params} = req;
+  const {code} = params;
+  LOGGER.debug({message:'Downloading Proof for Code', params });
+  const poi: POI = await get(code);
+
+  try {
+    // Get the binary data from the POI.
+    const {file} = poi;
+    const {binaryData} = file;
+    LOGGER.debug({message:'Returning Image Preview', file, length: binaryData.length });
+    fs.writeFileSync(path.join(__dirname,`image_${poi.code.substring(0,5)}.png`), binaryData.toString('base64'), {encoding: 'base64'});
+
+    LOGGER.debug({message:'Writing to file', file, length: binaryData.length });
+    const zip = new JSZip();
+    // Add Proof
+    zip.file("proof.json", JSON.stringify(poi));
+    // Add Image
+    const data = fs.readFileSync(path.join(__dirname,`image_${poi.code.substring(0,5)}.png`));
+    zip.file(`image_${poi.code.substring(0,5)}.png`, data)
 
 
+    // Write out .zip
+    // JSZip can generate Buffers so you can do the following
+    zip.generateNodeStream({type:'nodebuffer',streamFiles:true})
+   .pipe(fs.createWriteStream(path.join(__dirname, `POI_${poi.code.substring(0,5)}.zip`)))
+   .on('finish', function () {
+       // JSZip generates a readable stream with a "end" event,
+       // but is piped here in a writable stream which emits a "finish" event.
 
+       // Send the file
+       res.sendFile(path.join(__dirname, `POI_${poi.code.substring(0,5)}.zip`))
+
+       // Clean up all files.
+       setTimeout(async() => {
+        let deleteFileResult = await unlinkAsync(path.join(__dirname, `POI_${poi.code.substring(0,5)}.zip`));
+        LOGGER.debug({message: 'Clean Image File Result', deleteFileResult})
+        deleteFileResult = await unlinkAsync(path.join(__dirname, `POI_${poi.code.substring(0,5)}.zip`));
+        LOGGER.debug({message: 'Clean Zip File Result', deleteFileResult})
+       }, 5000)
+   })
+  } catch (e) {
+    console.error(e);
+    LOGGER.error({message:'Error fetching upload preview', error: e.toString()});
+    res.status(500).send(e);
+  }
 })
 
 module.exports = app

@@ -417,7 +417,7 @@ p {
 .top {
   margin-left: auto;
   margin-right: auto;
-  max-width: 1280px;
+  max-width: 1024px;
 }
 .body {
   display: flex;

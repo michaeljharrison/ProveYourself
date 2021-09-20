@@ -181,7 +181,6 @@ export default {
         if (!err) {
           const loading = this.$message.loading(`Creating POI Request...`, 0)
           this.loading = true
-          console.log(values)
           try {
             const poi = await this.$store.dispatch('ACTION_createNewPOI', {
               request: {

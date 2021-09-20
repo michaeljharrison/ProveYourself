@@ -126,7 +126,7 @@ export default {
   methods: {
     handleChange(info) {
       if (info.file.status !== 'uploading') {
-        console.log(info.file, info.fileList)
+        // console.log(info.file, info.fileList)
       }
       if (info.file.status === 'done') {
         this.$message.info(`${info.file.name} file uploaded, verifying..`)

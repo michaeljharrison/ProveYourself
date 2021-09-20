@@ -44,7 +44,6 @@ export async function create(key: string, record: Object) {
 
 export async function update(key: string, record: Object) {
   const result = await db.put(key, record);
-  console.log(result);
   return true;
 };
 

@@ -28,11 +28,13 @@
       </a-menu>
     </a-layout-header>
     <a-layout-content>
-      <a-steps :current="stateToInt()" size="small">
-        <a-step title="Create" />
-        <a-step title="Upload Proof" />
-        <a-step title="Verify" />
-      </a-steps>
+      <div class="stepWrapper">
+        <a-steps :current="stateToInt()" size="small">
+          <a-step title="Create" />
+          <a-step title="Upload Proof" />
+          <a-step title="Verify" />
+        </a-steps>
+      </div>
       <div class="content">
         <Nuxt />
       </div>
@@ -55,7 +57,6 @@ export default {
   },
   methods: {
     setCurrentState(newState: any) {
-      console.log(newState)
       switch (newState) {
         case constants.STATE.CREATING:
           this.$store.commit('SET_stateCreating')
@@ -71,7 +72,6 @@ export default {
       }
     },
     stateToInt() {
-      console.log(this.currentState)
       switch (this.currentState) {
         case constants.STATE.CREATING:
           return 0
@@ -123,7 +123,6 @@ html {
   flex-direction: column;
   justify-content: flex-start;
   align-items: center;
-  margin: 20px;
   overflow: scroll;
 }
 
@@ -133,13 +132,64 @@ html {
   font-weight: bold;
 }
 
-.ant-steps {
-  margin-top: 20px;
-  max-width: 1280px;
-  margin-bottom: 20px;
+.stepWrapper {
+  display: flex;
+  flex-direction: row;
+  justify-content: center;
+  min-width: 100%;
+  padding-top: 20px;
+  padding-bottom: 20px;
+  padding-left: 40px;
+  padding-right: 40px;
+  background-color: white;
 }
+
+.ant-steps {
+  max-width: 1024px;
+}
+
 .content {
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  align-items: center;
   overflow-y: scroll;
   width: 100%;
+  padding-left: 40px;
+  padding-right: 40px;
+
+  .header {
+    margin-left: auto;
+    margin-right: auto;
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    align-items: center;
+    max-width: 1024px;
+  }
+  .body {
+    .ant-result-icon {
+      max-width: 1024px;
+      margin-left: auto;
+      margin-right: auto;
+    }
+    .ant-result-title {
+      max-width: 1024px;
+      margin-left: auto;
+      margin-right: auto;
+    }
+    .ant-result-subtitle {
+      max-width: 1024px;
+      margin-left: auto;
+      margin-right: auto;
+    }
+    .ant-result-extra {
+      .top {
+      }
+      .bottom {
+        width: 90vw;
+      }
+    }
+  }
 }
 </style>

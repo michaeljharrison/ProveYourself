@@ -39,13 +39,11 @@ async function readTextFromURL(client: any, url: string) {
 
 async function readTextFromFile(client: any, filePath: string) {
 
-  console.log(`Create Read Stream for ${filePath}`)
     // Call API, returns a Promise<Models.readInStreamResponse>
     if (fs.existsSync(filePath)) {
       // file exists
-      console.log('File exists.')
     } else {
-      console.log('File doesnt exist');
+      // console.log('File doesnt exist');
     }
     const streamResponse = await client.readInStream(() => createReadStream(filePath))
     .then((response: any) => {
@@ -63,28 +61,25 @@ async function readTextFromFile(client: any, filePath: string) {
 
   // Wait for read recognition to complete
   // result.status is initially undefined, since it's the result of read
-  console.log('Wait for result...')
   while (true) {
     const readOpResult = await client.getReadResult(operationIdLocal)
       .then((result: any) => {
-        console.log(result);
         return result;
       })
-    console.log('Read status: ' + readOpResult.status)
     if (readOpResult.status === STATUS_FAILED) {
-      console.log('The Read File operation has failed.')
+      // console.log('The Read File operation has failed.')
       break;
     }
     if (readOpResult.status === STATUS_SUCCEEDED) {
-      console.log('The Read File operation was a success.');
-      console.log();
-      console.log('Read File local image result:');
+      // console.log('The Read File operation was a success.');
+      // console.log();
+      // console.log('Read File local image result:');
       // Print the text captured
 
       // Looping through: pages of result from readResults[], then Line[]
       for (const textRecResult of readOpResult.analyzeResult.readResults) {
         for (const line of textRecResult.lines) {
-          console.log(line.text)
+          // console.log(line.text)
         }
       }
       return readOpResult.analyzeResult.readResults; // Return the first page of result. Replace [0] with the desired page if this is a multi-page file such as .pdf or .tiff.
@@ -95,25 +90,26 @@ async function readTextFromFile(client: any, filePath: string) {
 
 // Prints all text from Read result
 function printRecText(readResults: Array<any>) {
-  console.log('Recognized text:');
+  // console.log('Recognized text:');
   for (const page in readResults) {
     if (readResults.length > 1) {
-      console.log(`==== Page: ${page}`);
+      // console.log(`==== Page: ${page}`);
     }
     const result = readResults[page];
     if (result.lines.length) {
       for (const line of result.lines) {
-        console.log(line.words.map((w:any)  => w.text).join(' '));
+        // console.log(line.words.map((w:any)  => w.text).join(' '));
       }
     }
-    else { console.log('No recognized text.'); }
+    else { // console.log('No recognized text.'); 
+    }
   }
 }
 
 export async function computerVisionFromURL(url: string) {
   // Recognize text in printed image from a URL
   try {
-    console.log('Read printed text from URL...', url.split('/').pop());
+    // console.log('Read printed text from URL...', url.split('/').pop());
     const printedResult = await readTextFromURL(computerVisionClient, url);
     printRecText(printedResult);
     return printedResult;
@@ -125,7 +121,7 @@ export async function computerVisionFromURL(url: string) {
 export async function computerVisionFromFile(filePath: any) {
   // Recognize text in printed image from a URL
   try {
-    console.log('Read printed text from File...', path.basename(filePath));
+    // console.log('Read printed text from File...', path.basename(filePath));
        // Call API, returns a Promise<Models.readInStreamResponse>
     const printedResult = await readTextFromFile(computerVisionClient, filePath);
     printRecText(printedResult);
