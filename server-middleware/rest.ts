@@ -104,7 +104,7 @@ app.post('/upload/:code', upload.single('file'), async (req: any, res: any) => {
   // TODO Steganography embed information within the image.
   // TODO WATERMARK WITH LOWER BOUND
   try {
-    const {params} = req;
+    const {params, body} = req;
     const {file} = req;
     const {code} = params;
     
@@ -120,7 +120,7 @@ app.post('/upload/:code', upload.single('file'), async (req: any, res: any) => {
         // Get File Path and file Hash.
         const filePath = path.join(__dirname, '..', 'uploads', file.filename);
         const fileData = {name: file.originalname, mimetype: file.mimetype, encoding: file.encoding, size: file.size, hash: hashImage(filePath)};
-        LOGGER.debug({message: 'Uploading File', poi, fileData, filePath})
+        LOGGER.debug({message: 'Uploading File', poi, fileData, filePath, body})
 
         // Run OCR over file.
         const ocrResult = await computerVisionFromFile(filePath)
@@ -140,14 +140,14 @@ app.post('/upload/:code', upload.single('file'), async (req: any, res: any) => {
         if(verificationResult.verified === "FAILED") {
           const writeResult = await update(code, verificationResult, {}, fileData)
           LOGGER.debug({message: 'Update Result', writeResult})
-          res.status(406).send(verificationResult);
+          res.status(401).send(verificationResult);
           return;
         }
 
         // Clean up POI data before submitting proof.
         poi.status = verificationResult.verified;
         poi.verification = verificationResult;
-        poi.file = fileData;
+        poi.file = fileData.toString();
         // Add a binary representation of the image to mongodb.
         poi.file.binaryData = fs.readFileSync(filePath);
         delete poi._id;

@@ -1,6 +1,8 @@
 $primary-color: #a5d6a7 !important; // primary color for all components
-$link-color: #66a4ad !important;; // link color
-$success-color: #52c41a !important;; // success state color
+$link-color: #66a4ad !important;
+; // link color
+$success-color: #52c41a !important;
+; // success state color
 $warning-color: #faad14; // warning state color
 $error-color: #f5222d; // error state color
 $font-size-base: 14px; // major text font size
@@ -15,14 +17,14 @@ $box-shadow-base: 0 2px 8px rgba(0, 0, 0, 0.15); // major shadow for layers
 
 .page-enter-active,
 .page-leave-active,
-.layout-enter-active, 
+.layout-enter-active,
 .layout-leave-active {
   transition: opacity .5s
 }
 
 .page-enter,
 .page-leave-active,
-.layout-enter, 
+.layout-enter,
 .layout-leave-active {
   opacity: 0
 }
@@ -43,4 +45,64 @@ h1 {
 
 img {
   border-radius: 0.75em;
+}
+
+
+.content {}
+
+
+.body {
+  .ant-result-extra {
+    display: flex;
+    flex-direction: row;
+  }
+}
+
+.body.verification {
+  .ant-result-extra {
+    display: flex !important;
+    flex-direction: column !important;
+
+    .top {
+      flex-direction: row;
+      display: flex;
+      margin-left: unset;
+      margin-right:unset;
+
+      button {
+        margin-left: 10px;
+      }
+    }
+  }
+}
+
+.footer {
+  position: fixed;
+  bottom: 0;
+  left: 0;
+  right: 0;
+  height: 50px;
+  z-index: 1;
+  background-color: white;
+  padding-left: 20px;
+  padding-right: 20px;
+  display: flex;
+  flex-direction: row;
+  justify-content: flex-end;
+  align-content: center;
+  align-items: center;
+
+  button,
+  a {
+    margin-left: 20px;
+
+    a {
+      margin-left: 0px;
+    }
+  }
+
+  .cancelButton {
+    margin-left: 0px;
+    margin-right: auto;
+  }
 }

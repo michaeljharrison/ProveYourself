@@ -1,216 +1,240 @@
 <template>
-  <main>
-    <h1>Upload</h1>
-    <p class="description">{{ constants.COPY.UPLOADING.DESCRIPTION }}</p>
-    <a-result
-      v-if="!verified"
-      status="error"
-      title="Verification Failed"
-      sub-title="Scroll down to try taking another photo and resubmitting."
-    >
-      <div class="desc">
-        <p style="font-size: 16px">
-          <strong>Below are some reasons verification may have failed:</strong>
-        </p>
-        <p>
-          <a-icon :style="{ color: 'red' }" type="close-circle" /> Poor lighting
-          or low quality image.
-        </p>
-        <p>
-          <a-icon :style="{ color: 'red' }" type="close-circle" /> All or some
-          of the verification code is obscured.
-        </p>
-        <p>
-          <a-icon :style="{ color: 'red' }" type="close-circle" /> All or some
-          of your face is obscured
-        </p>
-        <p>
-          <a-icon :style="{ color: 'red' }" type="close-circle" /> All or some
-          of your identification document is obscured.
-        </p>
-        <p>
-          <a-icon :style="{ color: 'red' }" type="close-circle" /> Your document
-          details do not match the document in the photo.
-        </p>
-      </div>
-    </a-result>
-    <br />
-    <div v-if="loading" class="loading">
-      <a-spin size="large" tip="Loading, please wait..."></a-spin>
-    </div>
-    <a-result
-      v-else-if="poi && poi.status === 'VERIFIED'"
-      status="success"
-      title="Already Verified"
-      sub-title="That POI has already been verified!"
-    >
-      <template #extra>
-        <a-input
-          :default-value="code"
-          placeholder="XXXXXXXX-XXXX-XXXX-XXXX-XXXXXXXXXXXXX"
-          @change="changeCode"
-        />
-        <a-button type="primary"
-          ><NuxtLink :to="'/create'">New POI </NuxtLink>
-        </a-button>
-        <a-button type="primary"
-          ><NuxtLink :to="'/verify?code=' + code">View Proof</NuxtLink>
-        </a-button>
-      </template>
-    </a-result>
-    <a-result
-      v-else-if="notFound"
-      status="404"
-      title="404"
-      sub-title="Sorry, no active request found with that code."
-    >
-      <template #extra>
-        <a-input
-          :default-value="code"
-          placeholder="XXXXXXXX-XXXX-XXXX-XXXX-XXXXXXXXXXXXX"
-          @change="changeCode"
-        />
-        <a-button type="primary"
-          ><a :href="'/upload?code=' + code">Check</a>
-        </a-button>
-      </template>
-    </a-result>
-    <div v-else-if="poi" :style="{ 'margin-bottom': '30px' }">
-      <div class="previewSection">
-        <div class="left">
-          <h2>Example</h2>
-          <p>
-            <i>
-              Please make sure each individual element is visible; your face,
-              your ID and the code on the paper.
-            </i>
+  <div>
+    <div class="body">
+      <h1>Upload Proof Documents</h1>
+      <p class="description">{{ constants.COPY.UPLOADING.DESCRIPTION }}</p>
+      <a-result
+        v-if="!verified"
+        status="error"
+        title="Verification Failed"
+        sub-title="Scroll down to try taking another photo and resubmitting."
+      >
+        <div class="desc">
+          <p style="font-size: 16px">
+            <strong
+              >Below are some reasons verification may have failed:</strong
+            >
           </p>
-          <img src="~/assets/images/example.png" />
-        </div>
-        <div class="right">
-          <h2>To Print</h2>
           <p>
-            <i>
-              If you don't have access to a printer you can write this by hand,
-              if so please write in block letters with consistent spacing.
-            </i>
+            <a-icon :style="{ color: 'red' }" type="close-circle" /> Poor
+            lighting or low quality image.
           </p>
-          <Preview
-            :print="false"
-            :code="poi.requestProof.proof.metadata.txnId.substring(0, 20)"
-            :name="poi.name"
-            :date="moment()"
-          />
+          <p>
+            <a-icon :style="{ color: 'red' }" type="close-circle" /> All or some
+            of the verification code is obscured.
+          </p>
+          <p>
+            <a-icon :style="{ color: 'red' }" type="close-circle" /> All or some
+            of your face is obscured
+          </p>
+          <p>
+            <a-icon :style="{ color: 'red' }" type="close-circle" /> All or some
+            of your identification document is obscured.
+          </p>
+          <p>
+            <a-icon :style="{ color: 'red' }" type="close-circle" /> Your
+            document details do not match the document in the photo.
+          </p>
         </div>
+      </a-result>
+      <br />
+      <div v-if="loading" class="loading">
+        <a-spin size="large" tip="Loading, please wait..."></a-spin>
       </div>
-    </div>
-
-    <a-result
-      v-else
-      title="Please Enter a Request Code"
-      sub-title="Please enter the request code for your Identity Proof, alternatively, follow the hyperlink provided to you."
-    >
-      <template #extra>
-        <a-input
-          :default-value="code"
-          placeholder="XXXXXXXX-XXXX-XXXX-XXXX-XXXXXXXXXXXXX"
-          @change="changeCode"
-        />
-        <a-button type="primary"
-          ><a :href="'/upload?code=' + code">Check</a>
-        </a-button>
-      </template>
-    </a-result>
-    <a-form :form="form">
-      <a-form-item>
-        <a-form-item label="Licence Number">
+      <a-result
+        v-else-if="poi && poi.status === 'VERIFIED'"
+        status="success"
+        title="Already Verified"
+        sub-title="That POI has already been verified!"
+      >
+        <template #extra>
           <a-input
-            v-decorator="[
-              'licenceNumber',
-              {
-                rules: [
-                  {
-                    required: true,
-                    message: 'Please input your licence number',
-                  },
-                ],
-              },
-            ]"
-            :disabled="loading"
-            placeholder="NCC1701A"
-            @change="setNumber"
+            :default-value="code"
+            placeholder="XXXXXXXX-XXXX-XXXX-XXXX-XXXXXXXXXXXXX"
+            @change="changeCode"
           />
-        </a-form-item>
-        <a-form-item label="Licence Expiry">
+          <a-button><a :href="'/verify?code=' + code">Check</a> </a-button>
+        </template>
+      </a-result>
+      <a-result
+        v-else-if="notFound"
+        status="404"
+        title="404"
+        sub-title="Sorry, no active request found with that code."
+      >
+        <template #extra>
           <a-input
-            v-decorator="[
-              'licenceExpiry',
-              {
-                rules: [
-                  {
-                    required: true,
-                    message: 'Please input your licence expiry',
-                  },
-                ],
-              },
-            ]"
-            :disabled="loading"
-            placeholder="01/01/21"
-            @change="setExpiry"
+            :default-value="code"
+            placeholder="XXXXXXXX-XXXX-XXXX-XXXX-XXXXXXXXXXXXX"
+            @change="changeCode"
           />
-        </a-form-item>
-        <a-form-item label="Licence Address">
-          <a-input
-            v-decorator="[
-              'address',
-              {
-                rules: [
-                  { required: true, message: 'Please input your address' },
-                ],
-              },
-            ]"
-            :disabled="loading"
-            placeholder="12 Cloverfield Lane"
-            @change="setAddress"
-          />
-        </a-form-item>
-        <a-upload
-          v-if="!notFound && poi && !result && poi.status !== 'VERIFIED'"
-          :disabled="loading"
-          :loading="loading"
-          name="file"
-          :multiple="true"
-          :file-list="fileList"
-          :action="'api/upload/' + poi.code"
-          accept=".jpg,.jpeg,.png"
-          :headers="headers"
-          :show-upload-list="false"
-          @change="handleChange"
-        >
-          <a-button :disabled="loading" :loading="loading">
-            <a-icon type="upload" /> Upload
+          <a-button type="primary"
+            ><a :href="'/upload?code=' + code">Check</a>
           </a-button>
-        </a-upload>
-      </a-form-item>
-    </a-form>
-    <a :href="'/print?code=' + code" target="__none">
-      <a-button :disabled="loading" :loading="loading">
-        <a-icon type="printer" /> Print
-      </a-button>
-    </a>
+        </template>
+      </a-result>
+      <div v-else-if="poi" :style="{ 'margin-bottom': '30px' }">
+        <div class="previewSection">
+          <div class="left">
+            <h2>Example</h2>
+            <p>
+              <i>
+                Please make sure each individual element is visible; your face,
+                your ID and the code on the paper.
+              </i>
+            </p>
+            <img src="~/assets/images/example.png" />
+          </div>
+          <div class="right">
+            <h2>To Print</h2>
+            <p>
+              <i>
+                If you don't have access to a printer you can write this by
+                hand, if so please write in block letters with consistent
+                spacing.
+              </i>
+            </p>
+            <Preview
+              :print="false"
+              :code="poi.requestProof.proof.metadata.txnId.substring(0, 20)"
+              :name="poi.name"
+              :date="moment()"
+            />
+          </div>
+        </div>
+      </div>
 
-    <a-button
-      v-if="
-        !loading && !notFound && poi && !result && poi.status !== 'VERIFIED'
-      "
-      :disabled="loading"
-      :loading="loading"
-      type="danger"
-      @click="cancel"
-    >
-      Cancel
-    </a-button>
-  </main>
+      <a-result
+        v-else
+        title="Please Enter a Request Code"
+        sub-title="Please enter the request code for your Identity Proof, alternatively, follow the hyperlink provided to you."
+      >
+        <template #extra>
+          <a-input
+            :default-value="code"
+            placeholder="XXXXXXXX-XXXX-XXXX-XXXX-XXXXXXXXXXXXX"
+            @change="changeCode"
+          />
+          <a-button type="primary"
+            ><a :href="'/upload?code=' + code">Check</a>
+          </a-button>
+        </template>
+      </a-result>
+      <a-form
+        v-if="!notFound && poi && !result && poi.status !== 'VERIFIED'"
+        :form="form"
+      >
+        <a-form-item>
+          <a-form-item label="Licence Number">
+            <a-input
+              v-decorator="[
+                'licenceNumber',
+                {
+                  rules: [
+                    {
+                      required: true,
+                      message: 'Please input your licence number',
+                    },
+                  ],
+                },
+              ]"
+              :disabled="loading"
+              placeholder="NCC1701A"
+              @change="setNumber"
+            />
+          </a-form-item>
+          <a-form-item label="Licence Expiry">
+            <a-input
+              v-decorator="[
+                'licenceExpiry',
+                {
+                  rules: [
+                    {
+                      required: true,
+                      message: 'Please input your licence expiry',
+                    },
+                  ],
+                },
+              ]"
+              :disabled="loading"
+              placeholder="01/01/21"
+              @change="setExpiry"
+            />
+          </a-form-item>
+          <a-form-item label="Licence Address">
+            <a-input
+              v-decorator="[
+                'address',
+                {
+                  rules: [
+                    { required: true, message: 'Please input your address' },
+                  ],
+                },
+              ]"
+              :disabled="loading"
+              placeholder="12 Cloverfield Lane"
+              @change="setAddress"
+            />
+          </a-form-item>
+        </a-form-item>
+      </a-form>
+    </div>
+    <div class="footer">
+      <a-button v-if="poi && poi.status === 'VERIFIED'"
+        ><NuxtLink :to="'/create'">Create New </NuxtLink>
+      </a-button>
+      <a-button v-if="poi && poi.status === 'VERIFIED'" type="primary"
+        ><NuxtLink :to="'/verify?code=' + code">View Proof</NuxtLink>
+      </a-button>
+      <a-button
+        v-if="
+          !loading && !notFound && poi && !result && poi.status !== 'VERIFIED'
+        "
+        class="cancelButton"
+        :disabled="loading"
+        :loading="loading"
+        type="danger"
+        @click="cancel"
+      >
+        Cancel
+      </a-button>
+      <a
+        v-if="!poi || poi.status !== 'VERIFIED'"
+        :href="'/print?code=' + code"
+        target="__none"
+      >
+        <a-button :disabled="loading" :loading="loading">
+          <a-icon type="printer" /> Print Code
+        </a-button>
+      </a>
+      <a-upload
+        :loading="loading"
+        name="file"
+        :multiple="true"
+        :file-list="fileList"
+        :action="'api/upload/' + code"
+        accept=".jpg,.jpeg,.png"
+        :headers="headers"
+        :show-upload-list="false"
+        :data="{ licenceNumber, licenceExpiry, licenceAddress }"
+        @change="handleChange"
+        @beforeUpload="beforeUpload"
+      >
+        <a-button
+          type="primary"
+          :disabled="
+            loading ||
+            licenceNumber === null ||
+            licenceExpiry === null ||
+            licenceAddress === null
+          "
+          :loading="loading"
+        >
+          <a-icon type="upload" /> Upload
+        </a-button>
+      </a-upload>
+    </div>
+  </div>
 </template>
 
 <script lang="ts">
@@ -294,8 +318,18 @@ export default {
     setAddress(event) {
       this.licenceAddress = event.target.value
     },
+    beforeUpload() {
+      this.form.validateFields((err, values) => {
+        if (!err) {
+          console.log('Received valus of form: ', values)
+          return true
+        } else {
+          return false
+        }
+      })
+    },
     handleChange(info) {
-      // console.log(info)
+      console.log(info)
       if (info.file.status === 'uploading') {
         this.verified = true
         if (this.loadingMessage) {
@@ -346,6 +380,11 @@ export default {
 .ant-result {
   padding: 0px !important;
 }
+.ant-result-extra {
+  .ant-input {
+    margin-bottom: 20px;
+  }
+}
 p.description {
 }
 .loading {
@@ -382,5 +421,12 @@ p.description {
 .ant-input,
 .ant-form-item {
   margin-bottom: 0px;
+}
+
+.body {
+  padding-left: 40px;
+  padding-right: 40px;
+  max-width: 1024px;
+  padding-bottom: 60px;
 }
 </style>

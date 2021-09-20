@@ -30,9 +30,13 @@
     <a-layout-content>
       <div class="stepWrapper">
         <a-steps :current="stateToInt()" size="small">
-          <a-step title="Create" />
-          <a-step title="Upload Proof" />
-          <a-step title="Verify" />
+          <a-step title="Create"> <a-icon slot="icon" type="setting" /></a-step>
+          <a-step title="Upload Proof">
+            <a-icon slot="icon" type="user"
+          /></a-step>
+          <a-step title="Verify">
+            <a-icon slot="icon" type="check-square"
+          /></a-step>
         </a-steps>
       </div>
       <div class="content">
@@ -153,7 +157,6 @@ html {
   flex-direction: column;
   justify-content: center;
   align-items: center;
-  overflow-y: scroll;
   width: 100%;
   padding-left: 40px;
   padding-right: 40px;

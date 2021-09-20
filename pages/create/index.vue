@@ -1,139 +1,164 @@
 <template>
-  <main>
-    <h1>New Identity Verification</h1>
-    <p>{{ constants.COPY.CREATING.DESCRIPTION }}</p>
-    <br />
-    <a-form :form="form" :layout="formLayout">
-      <div class="sectionHeader">
-        <h2>Proof Settings</h2>
-        <a-tooltip>
-          <template slot="title">
-            {{ constants.COPY.CREATING.PROOF_SETTINGS }}</template
+  <div>
+    <div class="body">
+      <h1>New Identity Verification</h1>
+      <p>{{ constants.COPY.CREATING.DESCRIPTION }}</p>
+      <br />
+      <a-form :form="form" :layout="formLayout">
+        <div class="sectionHeader">
+          <a-icon
+            type="check-square"
+            theme="twoTone"
+            :style="{ fontSize: '18px', 'padding-right': '10px' }"
+          />
+          <h2>Proof Settings</h2>
+          <a-tooltip>
+            <template slot="title">
+              {{ constants.COPY.CREATING.PROOF_SETTINGS }}</template
+            >
+            <a-icon type="question-circle" />
+          </a-tooltip>
+        </div>
+        <a-form-item label="Target Blockchain">
+          <a-radio-group
+            v-model="blockchain"
+            :default-value="constants.BLOCKCHAINS.HEDERA"
+            @change="handleBlockchainChange"
           >
-          <a-icon type="info-circle" />
-        </a-tooltip>
-      </div>
-      <a-form-item label="Target Blockchain">
-        <a-radio-group
-          v-model="blockchain"
-          :default-value="constants.BLOCKCHAINS.HEDERA"
-          @change="handleBlockchainChange"
-        >
-          <a-radio-button :value="constants.BLOCKCHAINS.HEDERA">
-            {{ constants.BLOCKCHAINS.HEDERA }}
-          </a-radio-button>
-          <a-tooltip>
-            <template slot="title"> Coming Soon(ish) </template>
-            <a-radio-button disabled :value="constants.BLOCKCHAINS.ETHEREUM">
-              {{ constants.BLOCKCHAINS.ETHEREUM }}
+            <a-radio-button :value="constants.BLOCKCHAINS.HEDERA">
+              {{ constants.BLOCKCHAINS.HEDERA }}
             </a-radio-button>
-          </a-tooltip>
+            <a-tooltip>
+              <template slot="title"> Coming Soon(ish) </template>
+              <a-radio-button disabled :value="constants.BLOCKCHAINS.ETHEREUM">
+                {{ constants.BLOCKCHAINS.ETHEREUM }}
+              </a-radio-button>
+            </a-tooltip>
+            <a-tooltip>
+              <template slot="title"> Coming Soon(ish) </template>
+              <a-radio-button disabled :value="constants.BLOCKCHAINS.BITCOIN">
+                {{ constants.BLOCKCHAINS.BITCOIN }}
+              </a-radio-button>
+            </a-tooltip>
+          </a-radio-group>
+        </a-form-item>
+        <a-form-item label="Expiry">
+          <a-date-picker
+            :default-value="expiry"
+            :disabled="loading"
+            :disabled-date="disabledDates"
+            @change="handleExpiryChange"
+          />
+        </a-form-item>
+        <div :style="{ 'margin-top': '34px' }" class="sectionHeader">
+          <a-icon
+            type="idcard"
+            theme="twoTone"
+            :style="{ fontSize: '18px', 'padding-right': '10px' }"
+          />
+          <h2>Identity Information</h2>
           <a-tooltip>
-            <template slot="title"> Coming Soon(ish) </template>
-            <a-radio-button disabled :value="constants.BLOCKCHAINS.BITCOIN">
-              {{ constants.BLOCKCHAINS.BITCOIN }}
-            </a-radio-button>
+            <template slot="title">
+              {{ constants.COPY.CREATING.IDENTITY_SETTINGS }}</template
+            >
+            <a-icon type="question-circle" />
           </a-tooltip>
-        </a-radio-group>
-      </a-form-item>
-      <a-form-item label="Expiry">
-        <a-date-picker
-          :disabled="loading"
-          :disabled-date="disabledDates"
-          @change="handleExpiryChange"
-        />
-      </a-form-item>
-      <div :style="{ 'margin-top': '34px' }" class="sectionHeader">
-        <h2>Identity Information</h2>
-        <a-tooltip>
-          <template slot="title">
-            {{ constants.COPY.CREATING.IDENTITY_SETTINGS }}</template
+        </div>
+        <a-form-item label="First Name">
+          <a-input
+            v-decorator="[
+              'firstName',
+              {
+                rules: [
+                  { required: true, message: 'Please input your first name' },
+                ],
+              },
+            ]"
+            :disabled="loading"
+            placeholder="First"
+          />
+        </a-form-item>
+        <a-form-item label="Last Name">
+          <a-input
+            v-decorator="[
+              'lastName',
+              {
+                rules: [
+                  { required: true, message: 'Please input your last name' },
+                ],
+              },
+            ]"
+            :disabled="loading"
+            placeholder="Lastman"
+          />
+        </a-form-item>
+        <a-form-item label="Date of Birth">
+          <a-date-picker
+            v-decorator="[
+              'lastName',
+              {
+                rules: [
+                  {
+                    required: true,
+                    message: 'Please input your date of birth',
+                  },
+                ],
+              },
+            ]"
+            :placeholder="dateOfBirth"
+            :disabled-date="disabledDOB"
+            :disabled="loading"
+            @change="handleDOBChange"
+          />
+        </a-form-item>
+        <a-form-item label="Email Address">
+          <a-input
+            v-decorator="[
+              'email',
+              {
+                rules: [
+                  {
+                    type: 'email',
+                    required: true,
+                    message: 'Please input your email address',
+                  },
+                ],
+              },
+            ]"
+            :disabled="loading"
+            placeholder="f.lastman@email.com"
+          />
+        </a-form-item>
+        <a-form-item label="Identity Document">
+          <a-radio-group
+            v-model="idDoc"
+            :default-value="constants.DOCUMENTS.DRIVERS_LICENSE"
+            @change="handleDocumentChange"
           >
-          <a-icon type="info-circle" />
-        </a-tooltip>
-      </div>
-      <a-form-item label="First Name">
-        <a-input
-          v-decorator="[
-            'firstName',
-            {
-              rules: [
-                { required: true, message: 'Please input your first name' },
-              ],
-            },
-          ]"
-          :disabled="loading"
-          placeholder="First"
-        />
-      </a-form-item>
-      <a-form-item label="Last Name">
-        <a-input
-          v-decorator="[
-            'lastName',
-            {
-              rules: [
-                { required: true, message: 'Please input your last name' },
-              ],
-            },
-          ]"
-          :disabled="loading"
-          placeholder="Lastman"
-        />
-      </a-form-item>
-      <a-form-item label="Date of Birth">
-        <a-date-picker
-          :disabled-date="disabledDOB"
-          :disabled="loading"
-          @change="handleDOBChange"
-        />
-      </a-form-item>
-      <a-form-item label="Email Address">
-        <a-input
-          v-decorator="[
-            'email',
-            {
-              rules: [
-                {
-                  type: 'email',
-                  required: true,
-                  message: 'Please input your email address',
-                },
-              ],
-            },
-          ]"
-          :disabled="loading"
-          placeholder="f.lastman@email.com"
-        />
-      </a-form-item>
-      <a-form-item label="Identity Document">
-        <a-radio-group
-          v-model="idDoc"
-          :default-value="constants.DOCUMENTS.DRIVERS_LICENSE"
-          @change="handleDocumentChange"
-        >
-          <a-radio-button :value="constants.DOCUMENTS.DRIVERS_LICENSE">
-            {{ constants.DOCUMENTS.DRIVERS_LICENSE }}
-          </a-radio-button>
-          <a-tooltip>
-            <template slot="title"> Coming Soon(ish) </template>
-            <a-radio-button disabled :value="constants.DOCUMENTS.PASSPORT">
-              {{ constants.DOCUMENTS.PASSPORT }}
+            <a-radio-button :value="constants.DOCUMENTS.DRIVERS_LICENSE">
+              {{ constants.DOCUMENTS.DRIVERS_LICENSE }}
             </a-radio-button>
-          </a-tooltip>
-        </a-radio-group>
-      </a-form-item>
-      <a-form-item>
-        <a-button
-          :disabled="loading"
-          type="primary"
-          :loading="loading"
-          @click="submit"
-        >
-          {{ (loading && 'Loading') || 'Verify Identity' }}
-        </a-button>
-      </a-form-item>
-    </a-form>
-  </main>
+            <a-tooltip>
+              <template slot="title"> Coming Soon(ish) </template>
+              <a-radio-button disabled :value="constants.DOCUMENTS.PASSPORT">
+                {{ constants.DOCUMENTS.PASSPORT }}
+              </a-radio-button>
+            </a-tooltip>
+          </a-radio-group>
+        </a-form-item>
+      </a-form>
+    </div>
+    <div class="footer">
+      <a-button
+        :disabled="loading"
+        type="primary"
+        :loading="loading"
+        @click="submit"
+      >
+        {{ (loading && 'Loading') || 'Next' }}
+      </a-button>
+    </div>
+  </div>
 </template>
 
 <script lang="ts">
@@ -148,8 +173,8 @@ export default {
     return {
       formLayout: 'vertical',
       blockchain: constants.BLOCKCHAINS.HEDERA,
-      expiry: moment(),
-      dateOfBirth: moment(),
+      expiry: moment().add(1, 'week'),
+      dateOfBirth: moment().subtract(16, 'years'),
       document: constants.DOCUMENTS.DRIVERS_LICENSE,
       constants,
       // @ts-ignore
@@ -240,5 +265,12 @@ export default {
 
 .ant-btn .ant-btn-primary {
   margin-top: 10px;
+}
+
+.body {
+  padding-left: 40px;
+  padding-right: 40px;
+  max-width: 1024px;
+  padding-bottom: 60px;
 }
 </style>
