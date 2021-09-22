@@ -10,7 +10,7 @@
     "lint:js": "eslint --ext \".js,.vue\" --ignore-path .gitignore .",
     "prepare": "husky install",
     "lint": "yarn lint:js",
-    "test:e2e": "wdio wdio.conf.js"
+    "test": "wdio wdio.conf.js"
   },
   "lint-staged": {
     "*.{js,vue}": "eslint"
