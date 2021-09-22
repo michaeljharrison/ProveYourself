@@ -90,8 +90,7 @@
             <p>
               <i>
                 If you don't have access to a printer you can write this by
-                hand, if so please write in block letters with consistent
-                spacing.
+                hand, in block letters.
               </i>
             </p>
             <Preview

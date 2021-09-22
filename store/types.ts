@@ -15,6 +15,7 @@ export interface Verification {
   verifiedConfidence: number,
   wordFound: number,
   lineFound: number
+  verificationCode: string
 }
 
 export interface POI {

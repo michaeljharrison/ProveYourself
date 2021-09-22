@@ -28,17 +28,6 @@
       </a-menu>
     </a-layout-header>
     <a-layout-content>
-      <div class="stepWrapper">
-        <a-steps :current="stateToInt()" size="small">
-          <a-step title="Create"> <a-icon slot="icon" type="setting" /></a-step>
-          <a-step title="Upload Proof">
-            <a-icon slot="icon" type="user"
-          /></a-step>
-          <a-step title="Verify">
-            <a-icon slot="icon" type="check-square"
-          /></a-step>
-        </a-steps>
-      </div>
       <div class="content">
         <Nuxt />
       </div>
@@ -91,7 +80,7 @@ export default {
 }
 </script>
 
-<style lang="scss">
+<style lang="scss" scoped>
 html {
   font-family: 'Source Sans Pro', -apple-system, BlinkMacSystemFont, 'Segoe UI',
     Roboto, 'Helvetica Neue', Arial, sans-serif;
@@ -169,12 +158,33 @@ html {
     justify-content: center;
     align-items: center;
     max-width: 1024px;
+    .ant-result {
+      padding: 0px !important;
+      width: 80%;
+      max-width: 1024px;
+      .ant-steps-item-container {
+        display: flex;
+      }
+    }
   }
   .body {
+    margin-left: auto;
+    margin-right: auto;
+    .ant-result {
+      padding-top: 0px;
+      padding-bottom: 0px;
+      padding: 0px !important;
+    }
     .ant-result-icon {
       max-width: 1024px;
       margin-left: auto;
       margin-right: auto;
+      display: flex;
+      padding-top: 0 !important;
+      p {
+        margin-left: 10px;
+        margin-right: 10px;
+      }
     }
     .ant-result-title {
       max-width: 1024px;

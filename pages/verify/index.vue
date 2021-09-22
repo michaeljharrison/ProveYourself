@@ -57,7 +57,10 @@
               <br />
               <br />
             </div>
-            <div class="bottom">
+            <div
+              class="bottom"
+              :style="{ 'padding-left': '20px', 'padding-right': '20px' }"
+            >
               <div class="left">
                 <h2>Uploaded Image</h2>
                 <img
@@ -324,6 +327,16 @@ export default {
 </script>
 
 <style lang="scss" scoped>
+.ant-result-extra {
+  max-width: 1280px;
+  padding-left: 20px;
+  padding-right: 20px;
+  .top {
+    margin-left: auto !important;
+    margin-right: auto !important;
+    min-width: 612px;
+  }
+}
 .bottom {
   display: flex;
   flex-direction: row;

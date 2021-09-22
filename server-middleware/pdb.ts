@@ -50,15 +50,26 @@ export function hashImage(filePath: string) {
   return hashSum.digest('hex');
 }
 
-export async function getCertificate(rowProof: any, rowData: any) {
+export async function getCertificate(rowProof: any, rowData: any, metadata: any) {
   const config = {
     method: 'post',
+    // url: 'http://localhost:8188/api/getCertificate',
     url: 'https://api.dev.provendocs.com/api/getCertificate/',
     responseType: 'stream',
     headers: { 
       'Authorization': COMP_VAULT_KEY,
     },
-    data: {rowProof, rowData}
+    data: {rowProof, rowData, custom: {
+      pageOne: {
+        subtitle: `For the Proof of Identity Request (POI)`,
+        id: metadata.code,
+        bodyOne: `This certificate constitutes proof that the Proof of Identity request with the above code has been anchored to a Blockchain using the ${metadata.blockchain} protocol between:`,
+        bodyTwo: `This proof includes the request, metadata and all additionally provided identity documents.`,
+        date: `${metadata.start} and ${metadata.end}`,
+        attestToOne: '(a) The POI has not been altered.',
+        attestToTwo: `(b) The POI existed and was completed between the two provided times.`
+      }
+    }}
   };
     
   try {

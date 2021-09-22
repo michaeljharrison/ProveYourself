@@ -47,5 +47,11 @@ export default {
 .print_true {
   justify-content: space-around;
   height: 100vh;
+  h1 {
+    font-size: 4vw;
+  }
+  h3 {
+    font-size: 4vw;
+  }
 }
 </style>

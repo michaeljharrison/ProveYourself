@@ -2,6 +2,7 @@
 
 // Imports.
 import path from 'path';
+import crypto from 'crypto';
 import { v4 as uuidv4 } from 'uuid';
 // eslint-disable-next-line
 import colors from 'colors';
@@ -120,11 +121,11 @@ app.post('/upload/:code', upload.single('file'), async (req: any, res: any) => {
         // Get File Path and file Hash.
         const filePath = path.join(__dirname, '..', 'uploads', file.filename);
         const fileData = {name: file.originalname, mimetype: file.mimetype, encoding: file.encoding, size: file.size, hash: hashImage(filePath)};
-        LOGGER.debug({message: 'Uploading File', poi, fileData, filePath, body})
+        LOGGER.debug({message: 'Uploading File', code: poi.code, filePath, body})
 
         // Run OCR over file.
         const ocrResult = await computerVisionFromFile(filePath)
-        // LOGGER.debug({message: 'OCR Result', ocrResult})
+        LOGGER.debug({message: 'OCR Result', ocrResult})
 
         // TODO Add a new stage for facial recognition, make sure it's a photo of a person.
 
@@ -134,7 +135,7 @@ app.post('/upload/:code', upload.single('file'), async (req: any, res: any) => {
 
         // Verify OCR Data for code.
         const verificationResult: Verification = await checkUpload(poi, ocrResult[0]);
-        LOGGER.debug({message: 'Verification Result', verificationResult})
+        LOGGER.debug({message: 'Verification Result',verificationResult})
 
         // Don't bother proving if the verification fails.
         if(verificationResult.verified === "FAILED") {
@@ -147,15 +148,21 @@ app.post('/upload/:code', upload.single('file'), async (req: any, res: any) => {
         // Clean up POI data before submitting proof.
         poi.status = verificationResult.verified;
         poi.verification = verificationResult;
-        poi.file = fileData.toString();
+        poi.file = fileData;
+
         // Add a binary representation of the image to mongodb.
-        poi.file.binaryData = fs.readFileSync(filePath);
+        const fileBuffer = fs.readFileSync(filePath);
+        const hashSum = crypto.createHash('sha256');
+        hashSum.update(fileBuffer);
+        poi.file.hashedBinaryData = hashSum.digest('hex');
         delete poi._id;
 
         // Submit Proof.
         LOGGER.debug({message:'Creating proof for verification poi', poi });
         const proofResult = await anchorPOI(poi)
         LOGGER.debug({message:'Result of anchor verification proof', poi, proofResult });
+
+        poi.file.binaryData = fileBuffer
 
         // Update DB
         const writeResult = await update(code, verificationResult, proofResult, fileData)
@@ -185,7 +192,8 @@ app.get('/certificate/:code', async (req: any, res: any) => {
   try {
     LOGGER.debug({message:'Fetching cert for poi', request: {rowProof: poi.verificationProof.proof, rowData: {key: poi.file.name, hash: poi.file.hash}} });
 
-    const response = await getCertificate(poi.verificationProof.proof, {key: poi.file.name, hash: poi.file.hash})
+    const certMetadata = {code: poi.code, person: poi.name, email: poi.email, start: poi.createdOn, end: poi.verifiedOn, blockchain: poi.blockchain};
+    const response = await getCertificate(poi.verificationProof.proof, {key: poi.file.name, hash: poi.file.hash}, certMetadata)
     if(response.status !== 200 || !response) {
       LOGGER.error({message:'Error creating PDF for POI', result: response.toString()});
       res.status(500).send(response);

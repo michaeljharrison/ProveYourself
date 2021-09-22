@@ -14,6 +14,8 @@ export function checkUpload(poi: POI, ocrResult: ReadResult) : Verification{
     // Iterate through each word on that line.
     const {words} = line;
     words.forEach((word, wordNumber) => {
+      console.log(`${word.text} === ${verificationCode}`)
+      // First see if the verification code exists in this text.
       if(word.text === verificationCode) {
         verified = POI_STATUS.VERIFIED;
         verifiedConfidence = word.confidence
@@ -22,5 +24,5 @@ export function checkUpload(poi: POI, ocrResult: ReadResult) : Verification{
       }
     })
   })
-  return {verified, verifiedConfidence, lineFound, wordFound};
+  return {verified, verifiedConfidence, lineFound, wordFound, verificationCode};
 }

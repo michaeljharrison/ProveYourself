@@ -1,6 +1,5 @@
 <template>
   <main>
-    <br />
     <div v-if="loading" class="loading">
       <a-spin size="large" tip="Loading, please wait..."></a-spin>
     </div>
@@ -41,10 +40,10 @@
         </a-button>
       </template>
     </a-result>
-    <div v-else-if="poi" :style="{ 'margin-bottom': '30px' }">
+    <div v-else-if="poi" class="container" :style="{}">
       <Preview
         :print="true"
-        :code="poi.code"
+        :code="poi.requestProof.proof.metadata.txnId.substring(0, 20)"
         :name="poi.name"
         :date="moment()"
       />
@@ -169,5 +168,20 @@ export default {
 }
 .ant-input {
   margin-bottom: 30px;
+}
+
+.print_true {
+  height: 100vh;
+  width: 100vw;
+}
+
+.container {
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  align-items: center;
+}
+.code {
+  font-size: 10vh !important;
 }
 </style>
