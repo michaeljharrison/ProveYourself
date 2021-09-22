@@ -57,7 +57,9 @@ export default {
   ],
 
   // Axios module configuration: https://go.nuxtjs.dev/config-axios
-  axios: {},
+  axios: {
+    BaseURL: 'https://proveyourself.azurewebsites.net/',
+  },
 
   // PWA module configuration: https://go.nuxtjs.dev/pwa
   pwa: {

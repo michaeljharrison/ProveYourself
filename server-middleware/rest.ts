@@ -21,6 +21,8 @@ const express = require('express')
 const multer  =   require('multer');  
 const upload = multer({ dest: 'uploads/' })
 const unlinkAsync = promisify(fs.unlink)
+const cors = require('cors');
+
 // Logging
 const WINSTON_FORMAT = winston.format.combine(
   winston.format.colorize({ all: true }),
@@ -46,7 +48,7 @@ const LOGGER = winston.createLogger({
 
 // Setup.
 const app = express()
-
+app.use(cors())
 app.use(expressWinston.logger({
   transports: [
     new winston.transports.Console()
@@ -61,6 +63,11 @@ app.use(bodyParser.json());
 
 // Routes.
 app.use(express.json())
+
+
+app.get('/health', async (req: any, res: any) => {
+  res.status(200).return(true);
+})
 
 app.post('/create', async (req: any, res: any) => {
   const poi = req.body;
