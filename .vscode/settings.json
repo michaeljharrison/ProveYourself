@@ -1,0 +1,8 @@
+{
+  "appService.zipIgnorePattern": [
+    "node_modules{,/**}",
+    ".vscode{,/**}"
+  ],
+  "appService.defaultWebAppToDeploy": "/subscriptions/d33e26b4-34fa-42e4-8bb5-b0c45683cf78/resourceGroups/ProveYourself/providers/Microsoft.Web/sites/ProveYourself",
+  "appService.deploySubpath": "."
+}
