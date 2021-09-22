@@ -66,7 +66,7 @@ app.use(express.json())
 
 
 app.get('/health', async (req: any, res: any) => {
-  res.status(200).return(true);
+  res.status(200).send(true);
 })
 
 app.post('/create', async (req: any, res: any) => {
