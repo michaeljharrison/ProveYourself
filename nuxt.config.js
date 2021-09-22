@@ -18,10 +18,10 @@ export default {
   serverMiddleware: [{ path: '/api', handler: '~/server-middleware/rest.ts' }],
 
   server: {
-    port:  process.env.PORT, // default: 3000
-    host: '0.0.0.0' // default: localhost
-  }
-  
+    port: process.env.PORT, // default: 3000
+    host: '0.0.0.0', // default: localhost
+  },
+
   // Plugins to run before rendering page: https://go.nuxtjs.dev/config-plugins
   plugins: ['@/plugins/antd-ui', '@/plugins/vue-json-pretty'],
 
