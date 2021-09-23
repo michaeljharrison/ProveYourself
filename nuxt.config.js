@@ -58,7 +58,20 @@ export default {
 
   // Axios module configuration: https://go.nuxtjs.dev/config-axios
   axios: {
-    BaseURL: 'https://proveyourself.azurewebsites.net/',
+    browserBaseURL: 'http://localhost:8000',
+    retry: true,
+  },
+
+  publicRuntimeConfig: {
+    axios: {
+      browserBaseURL: process.env.BROWSER_BASE_URL,
+    },
+  },
+
+  privateRuntimeConfig: {
+    axios: {
+      baseURL: process.env.BASE_URL,
+    },
   },
 
   // PWA module configuration: https://go.nuxtjs.dev/pwa

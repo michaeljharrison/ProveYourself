@@ -3,8 +3,10 @@ import { POI, Verification } from "../store/types";
 const winston = require('winston');
 const { MongoClient } = require("mongodb");
 // Replace the uri string with your MongoDB deployment's connection string.
-const uri =
+const URI =
   process.env.PROVE_YOURSELF_DB || "mongodb://localhost:27017";
+const DB = process.env.PROVE_YOURSELF_DATABASE || 'proveYourself';
+
 const WINSTON_FORMAT = winston.format.combine(
   winston.format.colorize({ all: true }),
   winston.format.timestamp(),
@@ -26,12 +28,17 @@ const LOGGER = winston.createLogger({
         })
     ]
 });
-const client = new MongoClient(uri);
+const client = new MongoClient(URI);
 let database = null;
 
 async function init() {
-  await client.connect();
-  database = client.db('prove_yourself')
+  LOGGER.info({message: 'Creating connection to MongoDB...', DB, URI});
+  try {
+    await client.connect();
+    database = client.db(DB)
+  } catch(e) {
+    LOGGER.error({message: 'Could not connect to MongoDB', DB, URI, e});
+  }  
 }
 init();
 
