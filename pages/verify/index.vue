@@ -155,7 +155,7 @@
                     <div class="iframeContainer">
                       <iframe
                         title="proofIFrame"
-                        :src="`/api/certificate/${poi.code}#view=fitH`"
+                        :src="`/certificate?code=${code}`"
                         type="application/pdf"
                         width="100%"
                         height="100%"
@@ -284,6 +284,8 @@ export default {
         this.code = fetchedCode
       }
       this.$message.info(`POI Found...`)
+      this.certContent = `<html><body><object data="https://proveyourself.azurewebsites.net/api/certificate/${poi.code}" type="application/pdf"><embed src="https://proveyourself.azurewebsites.net/api/certificate/${poi.code}" type="application/pdf"/></object></body></html>
+`
     } catch (e) {
       if (fetchedCode) {
         this.$message.error(`Cannot find a request with that code!`)

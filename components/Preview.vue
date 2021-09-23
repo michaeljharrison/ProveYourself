@@ -35,12 +35,12 @@ export default {
     margin-bottom: 10vh !important;
     white-space: nowrap;
     max-width: 100vw;
-    font-size: 2vw;
+    font-size: 3.5vh;
   }
   h3 {
     white-space: nowrap;
     max-width: 100vw;
-    font-size: 2vw;
+    font-size: 3.5vh;
   }
 }
 
