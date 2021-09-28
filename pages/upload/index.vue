@@ -4,7 +4,7 @@
       <h1>Upload Proof Documents</h1>
       <p class="description">{{ constants.COPY.UPLOADING.DESCRIPTION }}</p>
       <a-result
-        v-if="!verified"
+        v-if="!verified || (poi && poi.status === 'FAILED')"
         status="error"
         title="Verification Failed"
         sub-title="Scroll down to try taking another photo and resubmitting."
@@ -89,7 +89,7 @@
         </template>
       </a-result>
       <div
-        v-else-if="poi && poi.status === 'CREATED'"
+        v-else-if="poi && (poi.status === 'CREATED' || poi.status === 'FAILED')"
         :style="{ 'margin-bottom': '30px' }"
       >
         <div class="previewSection">
@@ -159,7 +159,11 @@
       </a-result>
       <a-form
         v-if="
-          !notFound && !loading && poi && !result && poi.status === 'CREATED'
+          !notFound &&
+          !loading &&
+          poi &&
+          !result &&
+          (poi.status === 'CREATED' || poi.status === 'FAILED')
         "
         :form="form"
       >

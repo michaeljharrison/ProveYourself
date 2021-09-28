@@ -184,6 +184,7 @@
         >
           <template #icon>
             <a-spin
+              v-if="poi && poi.status === 'UPLOADING' && pollingProof"
               size="large"
               :tip="`Checking again in ${pollingProof} seconds...`"
             ></a-spin>
