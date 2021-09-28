@@ -22,15 +22,15 @@ jobs:
     - name: Log in to registry
       uses: docker/login-action@v1
       with:
-        registry: https://provendbdev.azurecr.io/
-        username: ${{ secrets.AzureAppService_ContainerUsername_426dc373dde84225af931a2ced427bff }}
-        password: ${{ secrets.AzureAppService_ContainerPassword_396e6930e6df4de7ad2c603b8287f5ca }}
+        registry: https://proveyourself.azurecr.io/
+        username: ${{ secrets.AzureAppService_ContainerUsername_972815868e2c4bf79dc15b6a11f0633d }}
+        password: ${{ secrets.AzureAppService_ContainerPassword_5329c82c775241d9ac141306d9af764d }}
 
     - name: Build and push container image to registry
       uses: docker/build-push-action@v2
       with:
         push: true
-        tags: provendbdev.azurecr.io/proveyourself:latest
+        tags: proveyourself.azurecr.io/${{ secrets.AzureAppService_ContainerUsername_972815868e2c4bf79dc15b6a11f0633d }}/proveyourself:${{ github.sha }}
         file: ./Dockerfile
 
   deploy:
@@ -47,5 +47,5 @@ jobs:
       with:
         app-name: 'ProveYourself'
         slot-name: 'production'
-        publish-profile: ${{ secrets.AzureAppService_PublishProfile_36510cf835b34ba28380b0bf9f823974 }}
-        images: 'provendbdev.azurecr.io/${{ secrets.AzureAppService_ContainerUsername_426dc373dde84225af931a2ced427bff }}/proveyourself:${{ github.sha }}'
+        publish-profile: ${{ secrets.AzureAppService_PublishProfile_6802c0cdcf55444480e7d7871c0c038d }}
+        images: 'proveyourself.azurecr.io/${{ secrets.AzureAppService_ContainerUsername_972815868e2c4bf79dc15b6a11f0633d }}/proveyourself:${{ github.sha }}'
