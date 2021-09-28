@@ -13,12 +13,27 @@ $disabled-color: rgba(0, 0, 0, 0.25); // disable state color
 $border-radius-base: 4px; // major border radius
 $border-color-base: #d9d9d9; // major border color
 $box-shadow-base: 0 2px 8px rgba(0, 0, 0, 0.15); // major shadow for layers
+/*
+* Prefixed by https://autoprefixer.github.io
+* PostCSS: v8.3.6,
+* Autoprefixer: v10.3.1
+* Browsers: last 4 version
+*/
 
+.templateWrapper {
+  display: flex;
+flex-direction: column;
+justify-content: center;
+align-items: center;
+width: 100%;
+}
 
 .page-enter-active,
 .page-leave-active,
 .layout-enter-active,
 .layout-leave-active {
+  -webkit-transition: opacity .5s;
+  -o-transition: opacity .5s;
   transition: opacity .5s
 }
 
@@ -33,6 +48,10 @@ h1 {
   margin-top: 20px;
   text-align: center;
   font-size: 42px;
+}
+
+.ant-spin {
+  padding-top: 6px;
 }
 
 .ant-form-vertical .ant-form-item {
@@ -55,18 +74,33 @@ img {
 .body {
   overflow-x: hidden;
   .ant-result-extra {
+    display: -webkit-box;
+    display: -ms-flexbox;
     display: flex;
-    flex-direction: row;
+    -webkit-box-orient: horizontal;
+    -webkit-box-direction: normal;
+        -ms-flex-direction: row;
+            flex-direction: row;
   }
 }
 
 .body.verification {
   .ant-result-extra {
+    display: -webkit-box !important;
+    display: -ms-flexbox !important;
     display: flex !important;
-    flex-direction: column !important;
+    -webkit-box-orient: vertical !important;
+    -webkit-box-direction: normal !important;
+        -ms-flex-direction: column !important;
+            flex-direction: column !important;
 
     .top {
-      flex-direction: row;
+      -webkit-box-orient: horizontal;
+      -webkit-box-direction: normal;
+          -ms-flex-direction: row;
+              flex-direction: row;
+      display: -webkit-box;
+      display: -ms-flexbox;
       display: flex;
       margin-left: unset;
       margin-right:unset;
@@ -88,11 +122,21 @@ img {
   background-color: white;
   padding-left: 20px;
   padding-right: 20px;
+  display: -webkit-box;
+  display: -ms-flexbox;
   display: flex;
-  flex-direction: row;
-  justify-content: flex-end;
-  align-content: center;
-  align-items: center;
+  -webkit-box-orient: horizontal;
+  -webkit-box-direction: normal;
+      -ms-flex-direction: row;
+          flex-direction: row;
+  -webkit-box-pack: end;
+      -ms-flex-pack: end;
+          justify-content: flex-end;
+  -ms-flex-line-pack: center;
+      align-content: center;
+  -webkit-box-align: center;
+      -ms-flex-align: center;
+          align-items: center;
 
   button,
   a {

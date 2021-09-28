@@ -8,7 +8,7 @@ import { v4 as uuidv4 } from 'uuid';
 import colors from 'colors';
 import { POI, POI_STATUS, Verification } from '../store/types';
 import {computerVisionFromFile} from './OCR'
-import {create, get, update} from './db'
+import {create, get, updateCreatedStatus, updateUploadingStatus, updateVerificationStatus} from './db'
 import { checkUpload } from './poi';
 import { anchorPOI, getCertificate, hashImage } from './pdb';
 const { promisify } = require('util')
@@ -20,8 +20,10 @@ const bodyParser = require("body-parser");
 const express = require('express')
 const multer  =   require('multer');  
 const upload = multer({ dest: 'uploads/' })
-const unlinkAsync = promisify(fs.unlink)
 const cors = require('cors');
+const MemoryStream = require('./MemoryStream');
+const unlinkAsync = promisify(fs.unlink)
+
 
 // Logging
 const WINSTON_FORMAT = winston.format.combine(
@@ -65,7 +67,7 @@ app.use(bodyParser.json());
 app.use(express.json())
 
 
-app.get('/health', async (req: any, res: any) => {
+app.get('/health', (req: any, res: any) => {
   res.status(200).send(true);
 })
 
@@ -74,25 +76,25 @@ app.post('/create', async (req: any, res: any) => {
   // Generate a unique code based on the blockchain:
   const code = uuidv4();
   poi.code = code
-  poi.status = POI_STATUS.CREATED;
+  poi.status = POI_STATUS.CREATING;
   poi.createdOn = new Date();
+
+  // Create initial database record.
+  const createRes = await create(code, poi)
+  if(createRes) {
+    res.json({ok: 1, ...poi})
+} else {
+  res.status(400).send({ok: 0, error: 'Failed to create record in levelDB.', result: createRes})
+}
 
   // SubmitProof
   LOGGER.debug({message:'Creating proof for initial poi', poi });
   const proofResult = await anchorPOI(poi)
 
   LOGGER.debug({message:'Result of anchor initial proof', poi, proofResult });
-  poi.requestProof = proofResult;
+  // Update the proof to created.
+  await updateCreatedStatus(code, proofResult)
 
-  // Save the request to the database.
-  const createRes = await create(code, poi)
-
-  if(createRes) {
-      res.json({ok: 1, ...poi})
-  } else {
-    res.status(400).send({ok: 0, error: 'Failed to create record in levelDB.', result: createRes})
-  }
-  
 })
 
 app.post('/get', async (req: any, res: any) => {
@@ -109,6 +111,7 @@ app.post('/get', async (req: any, res: any) => {
 })
 
 app.post('/upload/:code', upload.single('file'), async (req: any, res: any) => {
+
   // TODO Steganography embed information within the image.
   // TODO WATERMARK WITH LOWER BOUND
   try {
@@ -145,15 +148,15 @@ app.post('/upload/:code', upload.single('file'), async (req: any, res: any) => {
         LOGGER.debug({message: 'Verification Result',verificationResult})
 
         // Don't bother proving if the verification fails.
-        if(verificationResult.verified === "FAILED") {
-          const writeResult = await update(code, verificationResult, {}, fileData)
+        if(verificationResult.verified === POI_STATUS.FAILED) {
+          const writeResult = await updateVerificationStatus(code, verificationResult, {}, fileData)
           LOGGER.debug({message: 'Update Result', writeResult})
           res.status(401).send(verificationResult);
           return;
         }
 
         // Clean up POI data before submitting proof.
-        poi.status = verificationResult.verified;
+        poi.status = POI_STATUS.UPLOADING;
         poi.verification = verificationResult;
         poi.file = fileData;
 
@@ -164,6 +167,10 @@ app.post('/upload/:code', upload.single('file'), async (req: any, res: any) => {
         poi.file.hashedBinaryData = hashSum.digest('hex');
         delete poi._id;
 
+        // Update database to UPLOADING before submitting proof.
+        await updateUploadingStatus(code);
+        res.status(200).send({ok: 1, });
+
         // Submit Proof.
         LOGGER.debug({message:'Creating proof for verification poi', poi });
         const proofResult = await anchorPOI(poi)
@@ -172,13 +179,12 @@ app.post('/upload/:code', upload.single('file'), async (req: any, res: any) => {
         poi.file.binaryData = fileBuffer
 
         // Update DB
-        const writeResult = await update(code, verificationResult, proofResult, fileData)
+        const writeResult = await updateVerificationStatus(code, verificationResult, proofResult, fileData)
         LOGGER.debug({message: 'Update Result', writeResult})
 
         // Clean File
         const deleteFileResult = await unlinkAsync(filePath);
         LOGGER.debug({message: 'Clean File Result', deleteFileResult})
-        res.status(200).send({ok: 1, proofResult})
       }
     }
   } catch(error) {
@@ -261,27 +267,56 @@ app.get('/download/:code', async (req: any, res: any) => {
     // Add Image
     const data = fs.readFileSync(path.join(__dirname,`image_${poi.code.substring(0,5)}.png`));
     zip.file(`image_${poi.code.substring(0,5)}.png`, data)
+    // Add Certificate
+    LOGGER.debug({message:'Fetching cert for download', request: {rowData: {key: poi.file.name, hash: poi.file.hash}} });
 
+    const certMetadata = {code: poi.code, person: poi.name, email: poi.email, start: poi.createdOn, end: poi.verifiedOn, blockchain: poi.blockchain};
+    const response = await getCertificate(poi.verificationProof.proof, {key: poi.file.name, hash: poi.file.hash}, certMetadata)
+    if(response.status !== 200 || !response) {
+      LOGGER.error({message:'Error creating PDF for POI', result: response.toString()});
+      res.status(500).send(response);
+      return;
+    } else {
+      // Write Cert to file.
+      // const contentType = response.headers['content-type'];
+      let contentLength = response.headers['content-length'];
+      const writer = new MemoryStream;
+    
+      response.data.pipe(writer)
+        writer.on('finish', function () {
+    
+            const b = writer.toBuffer();
+    
+            const computedContentLength = b.byteLength;
+    
+            if (!contentLength) { contentLength = computedContentLength };
 
-    // Write out .zip
+            zip.file('certificate.pdf', b);
+               // Write out .zip
     // JSZip can generate Buffers so you can do the following
     zip.generateNodeStream({type:'nodebuffer',streamFiles:true})
-   .pipe(fs.createWriteStream(path.join(__dirname, `POI_${poi.code.substring(0,5)}.zip`)))
-   .on('finish', function () {
-       // JSZip generates a readable stream with a "end" event,
-       // but is piped here in a writable stream which emits a "finish" event.
+    .pipe(fs.createWriteStream(path.join(__dirname, `POI_${poi.code.substring(0,5)}.zip`)))
+    .on('finish', function () {
+        // JSZip generates a readable stream with a "end" event,
+        // but is piped here in a writable stream which emits a "finish" event.
+ 
+        // Send the file
+        res.sendFile(path.join(__dirname, `POI_${poi.code.substring(0,5)}.zip`))
+ 
+        // Clean up all files.
+        setTimeout(async() => {
+         let deleteFileResult = await unlinkAsync(path.join(__dirname, `POI_${poi.code.substring(0,5)}.zip`));
+         LOGGER.debug({message: 'Clean Image File Result', deleteFileResult})
+         deleteFileResult = await unlinkAsync(path.join(__dirname, `POI_${poi.code.substring(0,5)}.zip`));
+         LOGGER.debug({message: 'Clean Zip File Result', deleteFileResult})
+        }, 5000)
+    })
+        });
+     
+    }
 
-       // Send the file
-       res.sendFile(path.join(__dirname, `POI_${poi.code.substring(0,5)}.zip`))
 
-       // Clean up all files.
-       setTimeout(async() => {
-        let deleteFileResult = await unlinkAsync(path.join(__dirname, `POI_${poi.code.substring(0,5)}.zip`));
-        LOGGER.debug({message: 'Clean Image File Result', deleteFileResult})
-        deleteFileResult = await unlinkAsync(path.join(__dirname, `POI_${poi.code.substring(0,5)}.zip`));
-        LOGGER.debug({message: 'Clean Zip File Result', deleteFileResult})
-       }, 5000)
-   })
+ 
   } catch (e) {
     console.error(e);
     LOGGER.error({message:'Error fetching upload preview', error: e.toString()});

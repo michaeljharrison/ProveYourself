@@ -1,5 +1,5 @@
 <template>
-  <div>
+  <div class="templateWrapper">
     <div class="body verification" :style="{ 'overflow-x': hidden }">
       <div class="header">
         <h1>Verify</h1>
@@ -101,7 +101,7 @@
                         <a-statistic
                           title="Block Time"
                           :value="
-                            poi.requestProof.proof.metadata.blockTime.toString()
+                            poi.initialProof.proof.metadata.blockTime.toString()
                           "
                           style="margin-right: 50px"
                         />
@@ -153,13 +153,15 @@
 
                   <a-tab-pane key="2" tab="Certificate">
                     <div class="iframeContainer">
-                      <iframe
-                        title="proofIFrame"
-                        :src="`/certificate?code=${code}`"
+                      <object
+                        :data="`/api/certificate/${code}`"
                         type="application/pdf"
-                        width="100%"
-                        height="100%"
-                      />
+                      >
+                        <embed
+                          :src="`/api/certificate/${code}`"
+                          type="application/pdf"
+                        />
+                      </object>
                     </div>
                   </a-tab-pane>
                   <a-tab-pane key="3" tab="JSON">
@@ -172,6 +174,27 @@
                 </a-tabs>
               </div>
             </div>
+          </template>
+        </a-result>
+        <a-result
+          v-else-if="poi && poi.status === 'UPLOADING' && pollingProof"
+          status="success"
+          title="Creating Blockchain Proof..."
+          sub-title="Your proof of identity is being anchored on the blockchain, this may take a few minutes..."
+        >
+          <template #icon>
+            <a-spin
+              size="large"
+              :tip="`Checking again in ${pollingProof} seconds...`"
+            ></a-spin>
+          </template>
+          <template #extra>
+            <a-input
+              :default-value="code"
+              placeholder="XXXXXXXX-XXXX-XXXX-XXXX-XXXXXXXXXXXXX"
+              @change="changeCode"
+            />
+            <a-button><a :href="'/verify?code=' + code">Check</a> </a-button>
           </template>
         </a-result>
         <a-result
@@ -245,6 +268,7 @@ import 'vue-json-pretty/lib/styles.css'
 import { mapState } from 'vuex'
 import constants from '@/store/constants'
 export default {
+  name: 'VerifyPage',
   components: { VueJsonPretty },
   layout: 'default',
   transition: 'page',
@@ -254,6 +278,7 @@ export default {
         authorization: 'sharedSecret',
       },
       loading: true,
+      pollingProof: 0,
       constants,
       fileList: [],
       poi: null,
@@ -282,8 +307,11 @@ export default {
       if (poi) {
         this.poi = poi
         this.code = fetchedCode
+        if (poi.status === 'UPLOADING') {
+          this.pollingProof = 10
+          this.pollProof()
+        }
       }
-      this.$message.info(`POI Found...`)
       this.certContent = `<html><body><object data="https://proveyourself.azurewebsites.net/api/certificate/${poi.code}" type="application/pdf"><embed src="https://proveyourself.azurewebsites.net/api/certificate/${poi.code}" type="application/pdf"/></object></body></html>
 `
     } catch (e) {
@@ -307,6 +335,45 @@ export default {
     this.$store.commit('SET_stateVerifying')
   },
   methods: {
+    async pollProof() {
+      if (this.pollingProof <= 0) {
+        this.pollingProof = 10
+        let fetchedCode = this.$route.query.code
+        if ((!fetchedCode || fetchedCode.length <= 0) && this.currentPOI) {
+          fetchedCode = this.currentPOI.code
+        }
+        try {
+          const poi = await this.$store.dispatch('ACTION_fetchPOI', {
+            code: fetchedCode,
+          })
+          if (poi) {
+            this.poi = poi
+            this.code = fetchedCode
+            if (poi.status === 'UPLOADING') {
+              setTimeout(() => {
+                this.pollProof()
+              }, 1000)
+            } else {
+              this.$message.info(`Anchoring complete!`)
+              this.pollingProof = 0
+            }
+          }
+        } catch (e) {
+          if (fetchedCode) {
+            this.$message.error(`Cannot find a request with that code!`)
+            this.notFound = true
+          }
+          this.$store.commit('SET_isLoading', false)
+        } finally {
+          this.loading = false
+        }
+      } else {
+        this.pollingProof -= 1
+        setTimeout(() => {
+          this.pollProof()
+        }, 1000)
+      }
+    },
     changeCode(e: Event) {
       e.preventDefault()
       // @ts-ignore
@@ -329,6 +396,13 @@ export default {
 </script>
 
 <style lang="scss" scoped>
+/*
+* Prefixed by https://autoprefixer.github.io
+* PostCSS: v8.3.6,
+* Autoprefixer: v10.3.1
+* Browsers: last 4 version
+*/
+
 .ant-result-extra {
   max-width: 1280px;
   padding-left: 20px;
@@ -340,16 +414,30 @@ export default {
   }
 }
 .bottom {
+  display: -webkit-box;
+  display: -ms-flexbox;
   display: flex;
+  -webkit-box-orient: horizontal;
+  -webkit-box-direction: normal;
+  -ms-flex-direction: row;
   flex-direction: row;
+  -webkit-box-pack: justify;
+  -ms-flex-pack: justify;
   justify-content: space-between;
   margin-bottom: 20px;
 }
 .left,
 .right {
+  display: -webkit-box;
+  display: -ms-flexbox;
   display: flex;
+  -webkit-box-orient: vertical;
+  -webkit-box-direction: normal;
+  -ms-flex-direction: column;
   flex-direction: column;
   max-width: 45vw;
+  -webkit-box-flex: 1;
+  -ms-flex-positive: 1;
   flex-grow: 1;
   max-width: 50%;
   width: 50%;
@@ -376,7 +464,12 @@ h2 {
   padding: 0px !important;
 }
 .loading {
+  display: -webkit-box;
+  display: -ms-flexbox;
   display: flex;
+  -webkit-box-orient: vertical;
+  -webkit-box-direction: normal;
+  -ms-flex-direction: column;
   flex-direction: column;
   padding-bottom: 30px;
 }
@@ -385,16 +478,31 @@ h2 {
 }
 .ant-tabs {
   margin-bottom: 30px;
+  -webkit-transition: cubic-bezier(0.075, 0.82, 0.165, 1);
+  -o-transition: cubic-bezier(0.075, 0.82, 0.165, 1);
   transition: cubic-bezier(0.075, 0.82, 0.165, 1);
+  -webkit-transition-delay: 0s;
+  -o-transition-delay: 0s;
   transition-delay: 0s;
+  -webkit-transition-duration: 1s;
+  -o-transition-duration: 1s;
   transition-duration: 1s;
+  -webkit-transition-property: all;
+  -o-transition-property: all;
   transition-property: all;
 }
 
 .stats {
+  display: -webkit-box;
+  display: -ms-flexbox;
   display: flex;
+  -webkit-box-orient: horizontal;
+  -webkit-box-direction: normal;
+  -ms-flex-direction: row;
   flex-direction: row;
+  -ms-flex-wrap: wrap;
   flex-wrap: wrap;
+  -ms-flex-pack: distribute;
   justify-content: space-around;
   background-color: white;
   border-radius: 0.75em;
@@ -415,12 +523,18 @@ h2 {
   margin-top: 20px;
 }
 .ant-statistic {
+  display: -webkit-box;
+  display: -ms-flexbox;
   display: flex;
+  -webkit-box-orient: vertical;
+  -webkit-box-direction: normal;
+  -ms-flex-direction: column;
   flex-direction: column;
   margin-right: 0px !important;
 }
 .iframeContainer {
-  height: 100vh;
+  height: 75vh;
+  max-height: 75vh;
 }
 p {
   text-align: center;
@@ -431,12 +545,27 @@ p {
   max-width: 1024px;
 }
 .body {
+  display: -webkit-box;
+  display: -ms-flexbox;
   display: flex;
+  -webkit-box-orient: vertical;
+  -webkit-box-direction: normal;
+  -ms-flex-direction: column;
   flex-direction: column;
-  justify-content: center;
+  -webkit-box-pack: start;
+  -ms-flex-pack: start;
+  justify-content: flex-start;
 }
 
 img {
   border-radius: 0.75em;
+  max-height: 75vh;
+  -o-object-fit: scale-down;
+  object-fit: scale-down;
+}
+
+object {
+  width: 100%;
+  height: 100%;
 }
 </style>

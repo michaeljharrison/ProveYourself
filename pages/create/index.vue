@@ -1,5 +1,5 @@
 <template>
-  <div>
+  <div class="templateWrapper">
     <div class="body">
       <h1>New Identity Verification</h1>
       <p>{{ constants.COPY.CREATING.DESCRIPTION }}</p>
@@ -167,6 +167,7 @@ import 'moment/locale/en-au'
 // import { mapState } from 'vuex'
 import constants from '~/store/constants'
 export default {
+  name: 'CreatePage',
   layout: 'default',
   transition: 'page',
   data() {
@@ -249,8 +250,20 @@ export default {
 </script>
 
 <style lang="scss" scoped>
+/*
+* Prefixed by https://autoprefixer.github.io
+* PostCSS: v8.3.6,
+* Autoprefixer: v10.3.1
+* Browsers: last 4 version
+*/
+
 .sectionHeader {
+  display: -webkit-box;
+  display: -ms-flexbox;
   display: flex;
+  -webkit-box-orient: horizontal;
+  -webkit-box-direction: normal;
+  -ms-flex-direction: row;
   flex-direction: row;
   border-bottom: 1px solid rgba(0, 0, 0, 0.1);
   margin-bottom: 20px;

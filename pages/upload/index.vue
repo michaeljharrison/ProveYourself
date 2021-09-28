@@ -1,5 +1,5 @@
 <template>
-  <div>
+  <div class="templateWrapper">
     <div class="body">
       <h1>Upload Proof Documents</h1>
       <p class="description">{{ constants.COPY.UPLOADING.DESCRIPTION }}</p>
@@ -42,6 +42,21 @@
         <a-spin size="large" tip="Loading, please wait..."></a-spin>
       </div>
       <a-result
+        v-else-if="poi && poi.status === 'UPLOADING'"
+        status="success"
+        title="Verifying Upload."
+        sub-title="A proof of identity has already been uploaded for that request."
+      >
+        <template #extra>
+          <a-input
+            :default-value="code"
+            placeholder="XXXXXXXX-XXXX-XXXX-XXXX-XXXXXXXXXXXXX"
+            @change="changeCode"
+          />
+          <a-button><a :href="'/verify?code=' + code">Check</a> </a-button>
+        </template>
+      </a-result>
+      <a-result
         v-else-if="poi && poi.status === 'VERIFIED'"
         status="success"
         title="Already Verified"
@@ -73,7 +88,10 @@
           </a-button>
         </template>
       </a-result>
-      <div v-else-if="poi" :style="{ 'margin-bottom': '30px' }">
+      <div
+        v-else-if="poi && poi.status === 'CREATED'"
+        :style="{ 'margin-bottom': '30px' }"
+      >
         <div class="previewSection">
           <div class="left">
             <h2>Example</h2>
@@ -95,14 +113,34 @@
             </p>
             <Preview
               :print="false"
-              :code="poi.requestProof.proof.metadata.txnId.substring(0, 20)"
+              :code="poi.initialProof.proof.metadata.txnId.substring(0, 20)"
               :name="poi.name"
               :date="moment()"
             />
           </div>
         </div>
       </div>
-
+      <a-result
+        v-else-if="poi && poi.status === 'CREATING'"
+        status="success"
+        title="Creating Blockchain Proof..."
+        sub-title="Your request is being anchored on the blockchain, this may take a few minutes..."
+      >
+        <template #icon>
+          <a-spin
+            size="large"
+            :tip="`Checking again in ${pollingProof} seconds...`"
+          ></a-spin>
+        </template>
+        <template #extra>
+          <a-input
+            :default-value="code"
+            placeholder="XXXXXXXX-XXXX-XXXX-XXXX-XXXXXXXXXXXXX"
+            @change="changeCode"
+          />
+          <a-button><a :href="'/verify?code=' + code">Check</a> </a-button>
+        </template>
+      </a-result>
       <a-result
         v-else
         title="Please Enter a Request Code"
@@ -120,10 +158,13 @@
         </template>
       </a-result>
       <a-form
-        v-if="!notFound && poi && !result && poi.status !== 'VERIFIED'"
+        v-if="
+          !notFound && !loading && poi && !result && poi.status === 'CREATED'
+        "
         :form="form"
       >
         <a-form-item>
+          <h2>Identity Document Details</h2>
           <a-form-item label="Licence Number">
             <a-input
               v-decorator="[
@@ -243,6 +284,7 @@ import { mapState } from 'vuex'
 import Preview from '~/components/Preview.vue'
 import constants from '~/store/constants'
 export default {
+  name: 'UploadPage',
   components: { Preview },
   layout: 'default',
   transition: 'page',
@@ -251,6 +293,7 @@ export default {
       headers: {
         authorization: 'sharedSecret',
       },
+      pollingProof: 0,
       constants,
       loading: true,
       loadingMessage: null,
@@ -284,10 +327,14 @@ export default {
         code: fetchedCode,
       })
       if (poi) {
+        console.log(poi)
         this.poi = poi
         this.code = fetchedCode
+        if (poi.status === 'CREATING') {
+          this.pollingProof = 10
+          this.pollProof()
+        }
       }
-      this.$message.info(`POI Found...`)
     } catch (e) {
       if (fetchedCode) {
         this.$message.error(`Cannot find a request with that code!`)
@@ -308,6 +355,45 @@ export default {
     this.$fetch()
   },
   methods: {
+    async pollProof() {
+      if (this.pollingProof <= 0) {
+        this.pollingProof = 10
+        let fetchedCode = this.$route.query.code
+        if ((!fetchedCode || fetchedCode.length <= 0) && this.currentPOI) {
+          fetchedCode = this.currentPOI.code
+        }
+        try {
+          const poi = await this.$store.dispatch('ACTION_fetchPOI', {
+            code: fetchedCode,
+          })
+          if (poi) {
+            this.poi = poi
+            this.code = fetchedCode
+            if (poi.status === 'CREATING') {
+              setTimeout(() => {
+                this.pollProof()
+              }, 1000)
+            } else {
+              this.$message.info(`Anchoring complete!`)
+              this.pollingProof = 0
+            }
+          }
+        } catch (e) {
+          if (fetchedCode) {
+            this.$message.error(`Cannot find a request with that code!`)
+            this.notFound = true
+          }
+          this.$store.commit('SET_isLoading', false)
+        } finally {
+          this.loading = false
+        }
+      } else {
+        this.pollingProof -= 1
+        setTimeout(() => {
+          this.pollProof()
+        }, 1000)
+      }
+    },
     setNumber(event) {
       this.licenceNumber = event.target.value
     },
@@ -427,5 +513,9 @@ p.description {
   padding-right: 40px;
   max-width: 1024px;
   padding-bottom: 60px;
+}
+
+h2 {
+  border-bottom: 1px solid rgba(0, 0, 0, 0.1);
 }
 </style>

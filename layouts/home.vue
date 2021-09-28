@@ -40,7 +40,8 @@ import { mapState } from 'vuex'
 import 'moment/locale/en-au'
 import constants from '~/store/constants'
 export default {
-  layout: 'default',
+  name: 'HomeLayout',
+  layout: 'home',
   transition: 'page',
   computed: mapState(['currentState']),
   data() {
@@ -81,6 +82,13 @@ export default {
 </script>
 
 <style lang="scss" scoped>
+/*
+* Prefixed by https://autoprefixer.github.io
+* PostCSS: v8.3.6,
+* Autoprefixer: v10.3.1
+* Browsers: last 4 version
+*/
+
 html {
   font-family: 'Source Sans Pro', -apple-system, BlinkMacSystemFont, 'Segoe UI',
     Roboto, 'Helvetica Neue', Arial, sans-serif;
@@ -90,12 +98,14 @@ html {
   -webkit-text-size-adjust: 100%;
   -moz-osx-font-smoothing: grayscale;
   -webkit-font-smoothing: antialiased;
+  -webkit-box-sizing: border-box;
   box-sizing: border-box;
 }
 
 *,
 *::before,
 *::after {
+  -webkit-box-sizing: border-box;
   box-sizing: border-box;
   margin: 0;
 }
@@ -112,9 +122,18 @@ html {
 }
 
 .ant-layout-content {
+  display: -webkit-box;
+  display: -ms-flexbox;
   display: flex;
+  -webkit-box-orient: vertical;
+  -webkit-box-direction: normal;
+  -ms-flex-direction: column;
   flex-direction: column;
+  -webkit-box-pack: start;
+  -ms-flex-pack: start;
   justify-content: flex-start;
+  -webkit-box-align: center;
+  -ms-flex-align: center;
   align-items: center;
   overflow: scroll;
 }
@@ -126,8 +145,15 @@ html {
 }
 
 .stepWrapper {
+  display: -webkit-box;
+  display: -ms-flexbox;
   display: flex;
+  -webkit-box-orient: horizontal;
+  -webkit-box-direction: normal;
+  -ms-flex-direction: row;
   flex-direction: row;
+  -webkit-box-pack: center;
+  -ms-flex-pack: center;
   justify-content: center;
   min-width: 100%;
   padding-top: 20px;
@@ -139,23 +165,42 @@ html {
 
 .ant-steps {
   max-width: 1024px;
+  height: 28px !important;
 }
 
 .content {
+  display: -webkit-box;
+  display: -ms-flexbox;
   display: flex;
+  -webkit-box-orient: vertical;
+  -webkit-box-direction: normal;
+  -ms-flex-direction: column;
   flex-direction: column;
+  -webkit-box-pack: center;
+  -ms-flex-pack: center;
   justify-content: center;
+  -webkit-box-align: center;
+  -ms-flex-align: center;
   align-items: center;
   width: 100%;
-  padding-left: 40px;
-  padding-right: 40px;
+  padding-left: 0px;
+  padding-right: 0px;
 
   .header {
     margin-left: auto;
     margin-right: auto;
+    display: -webkit-box;
+    display: -ms-flexbox;
     display: flex;
+    -webkit-box-orient: vertical;
+    -webkit-box-direction: normal;
+    -ms-flex-direction: column;
     flex-direction: column;
+    -webkit-box-pack: center;
+    -ms-flex-pack: center;
     justify-content: center;
+    -webkit-box-align: center;
+    -ms-flex-align: center;
     align-items: center;
     max-width: 1024px;
     .ant-result {
@@ -163,7 +208,13 @@ html {
       width: 80%;
       max-width: 1024px;
       .ant-steps-item-container {
+        display: -webkit-box;
+        display: -ms-flexbox;
         display: flex;
+
+        .ant-steps {
+          height: 24px;
+        }
       }
     }
   }
@@ -179,6 +230,8 @@ html {
       max-width: 1024px;
       margin-left: auto;
       margin-right: auto;
+      display: -webkit-box;
+      display: -ms-flexbox;
       display: flex;
       padding-top: 0 !important;
       p {

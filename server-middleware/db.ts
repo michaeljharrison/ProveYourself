@@ -1,4 +1,4 @@
-import { POI, Verification } from "../store/types";
+import { POI, POI_STATUS, Verification } from "../store/types";
 
 const winston = require('winston');
 const { MongoClient } = require("mongodb");
@@ -61,7 +61,22 @@ export async function create(code: string, request: POI) {
   return request;
 };
 
-export async function update(code: string, verification: Verification, verificationProof: any, file: any) {
+export async function updateCreatedStatus(code: string, initialProof: any) {
+  const requests = database.collection('requests');
+  await requests.updateOne({code}, {$set: {status: POI_STATUS.CREATED , initialProof,}});
+  return true;
+};
+
+export async function updateUploadingStatus(code: string) {
+  const requests = database.collection('requests');
+  await requests.updateOne({code}, {$set: {status: POI_STATUS.UPLOADING}});
+  return true;
+};
+
+
+
+
+export async function updateVerificationStatus(code: string, verification: Verification, verificationProof: any, file: any) {
   const requests = database.collection('requests');
   await requests.updateOne({code}, {$set: {status: verification.verified , verification, verifiedOn: new Date(), verificationProof, file}});
   return true;

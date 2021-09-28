@@ -41,7 +41,6 @@ Layouts are a great help when you want to change the look and feel of your Nuxt 
 
 More information about the usage of this directory in [the documentation](https://nuxtjs.org/docs/2.x/directory-structure/layouts).
 
-
 ### `pages`
 
 This directory contains your application views and routes. Nuxt will read all the `*.vue` files inside this directory and setup Vue Router automatically.
@@ -67,3 +66,15 @@ More information about the usage of this directory in [the documentation](https:
 This directory contains your Vuex store files. Creating a file in this directory automatically activates Vuex.
 
 More information about the usage of this directory in [the documentation](https://nuxtjs.org/docs/2.x/directory-structure/store).
+
+# TO DOS
+
+1. When you are generating the first code, there can be a significant wait. Users might think that the application has hung. There should be a message like "Waiting for blockchain confirmation". Ditto on the second wait where the message is "validating photo" - it seems to have hung; People will understand a wait of that duration if "Waiting for blockchain" message appears.
+   1. Update status every time:
+      1. CREATING - Configuration sent, awaiting initial proof.
+      2. CREATED - First proof, awaiting upload.
+      3. UPLOADING - Image has been uploaded, awaiting second proof.
+      4. VERIFIED - Image has been verified and second proof done.
+      5. FAILED - Image has not been verified.
+2. The photo is squashed to fit the form factor of the screen. I'd rather you maintained aspect ratio and letterboxed it.
+3. The downloadable archive should include the certificate

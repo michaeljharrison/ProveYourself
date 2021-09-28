@@ -5,7 +5,9 @@ export enum Blockchain {
 }
 
 export enum POI_STATUS {
+  CREATING = "CREATING",
   CREATED = "CREATED",
+  UPLOADING = "UPLOADING",
   FAILED = "FAILED",
   VERIFIED = "VERIFIED",
 }
@@ -29,7 +31,7 @@ export interface POI {
   verification: Verification
   createdOn: Date,
   verifiedOn: Date,
-  requestProof: any,
+  initialProof: any,
   verificationProof: any,
   file: any,
 
