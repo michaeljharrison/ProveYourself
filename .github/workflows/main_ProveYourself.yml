@@ -30,7 +30,7 @@ jobs:
       uses: docker/build-push-action@v2
       with:
         push: true
-        tags: provendbdev.azurecr.io/${{ secrets.AzureAppService_ContainerUsername_426dc373dde84225af931a2ced427bff }}/proveyourself:${{ github.sha }}
+        tags: provendbdev.azurecr.io/${{ secrets.AzureAppService_ContainerUsername_426dc373dde84225af931a2ced427bff }}/proveyourself:latest
         file: ./Dockerfile
 
   deploy:
