@@ -95,7 +95,7 @@
         <a-form-item label="Date of Birth">
           <a-date-picker
             v-decorator="[
-              'lastName',
+              'dob',
               {
                 rules: [
                   {
