@@ -23,6 +23,7 @@ const express = require('express')
 const multer  =   require('multer');  
 const upload = multer({ dest: 'uploads/' })
 const cors = require('cors');
+const sizeof = require('object-sizeof')
 const MemoryStream = require('./MemoryStream');
 const unlinkAsync = promisify(fs.unlink)
 
@@ -69,7 +70,7 @@ app.use(bodyParser.json());
 app.use(express.json())
 
 
-app.get('/health', (req: any, res: any) => {
+app.get('/health', (_req: any, res: any) => {
   res.status(200).send(true);
 })
 
@@ -133,7 +134,7 @@ app.post('/upload/:code', upload.single('file'), async (req: any, res: any) => {
       } else {
         // Get File Path and file Hash.
         const filePath = path.join(__dirname, '..', 'uploads', file.filename);
-        const fileData = {name: file.originalname, mimetype: file.mimetype, encoding: file.encoding, size: file.size, hash: hashImage(filePath)};
+        const fileData = {name: file.originalname, mimetype: file.mimetype, encoding: file.encoding, size: file.size, hash: hashImage(filePath), binaryData: null};
         LOGGER.debug({message: 'Uploading File', code: poi.code, filePath, body})
 
         // Run OCR over file.
@@ -157,19 +158,17 @@ app.post('/upload/:code', upload.single('file'), async (req: any, res: any) => {
           res.status(401).send(verificationResult);
           return;
         }
+      // Add a binary representation of the image to mongodb.
+      const fileBuffer = fs.readFileSync(filePath);
+      const hashSum = crypto.createHash('sha256');
+      hashSum.update(fileBuffer);
+      fileData.binaryData = fileBuffer;
+      delete poi._id;
 
-        // Clean up POI data before submitting proof.
-        poi.status = POI_STATUS.UPLOADING;
-        poi.verification = verificationResult;
-        poi.file = fileData;
-
-        // Add a binary representation of the image to mongodb.
-        const fileBuffer = fs.readFileSync(filePath);
-        const hashSum = crypto.createHash('sha256');
-        hashSum.update(fileBuffer);
-        poi.file.hashedBinaryData = hashSum.digest('hex');
-        poi.file.binaryData = fileBuffer
-        delete poi._id;
+      // Clean up POI data before submitting proof.
+      poi.status = POI_STATUS.UPLOADING;
+      poi.verification = verificationResult;
+      poi.file = fileData;
 
         // Update database to UPLOADING before submitting proof.
         await updateVerificationStatus(code, verificationResult, {}, fileData, POI_STATUS.UPLOADING)
@@ -339,8 +338,9 @@ app.get('/download/:code', async (req: any, res: any) => {
       const {code} = poi
       // Submit new proof.
       LOGGER.debug({message:'Creating additional proof for pending poi...', code: poi.code, status: poi.status });
+      delete poi.verificationProof;
       const proofResult = await anchorPOI(poi)
-      LOGGER.debug({message:'New Proof created for pending poi.', code: poi.code, status: poi.status });
+      LOGGER.debug({message:'New Proof created for pending poi.', code: poi.code, status: poi.status, sizeOfProof: sizeof(proofResult), sizeOfDoc: sizeof(poi) });
 
       // Check if still pending.
       const oldPoi = await get(code);

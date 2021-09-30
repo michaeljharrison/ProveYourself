@@ -87,8 +87,15 @@ export async function anchorPOI(poi: POI) {
   // Create Builder
   const builder = merkle.newBuilder("sha-256");
 
+  // Filter POI (remove binary file data)
+  const filteredPOI = poi;
+  LOGGER.debug({message: 'Before removing BinaryData', file: filteredPOI && filteredPOI.file})
+  if(filteredPOI.file && filteredPOI.file.binaryData)
+    delete filteredPOI.file.binaryData;
+  LOGGER.debug({message: 'AFter removing BinaryData', file: filteredPOI && filteredPOI.file})
+
   // Build tree from POI document (recursive).
-  buildTree('', poi, builder);
+  buildTree('', filteredPOI, builder);
   const tree = builder.build();
   LOGGER.debug({message: 'Result of Building Tree for POI', tree})
 

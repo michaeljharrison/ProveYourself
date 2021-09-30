@@ -20,6 +20,15 @@ export interface Verification {
   verificationCode: string
 }
 
+export interface File {
+  name : string,
+  mimetype: string,
+  encoding : string,
+  size : number,
+  hash : string,
+  binaryData : any
+}
+
 export interface POI {
   _id: string,
   name: string,
@@ -33,6 +42,7 @@ export interface POI {
   verifiedOn: Date,
   initialProof: any,
   verificationProof: any,
-  file: any,
-
+  file: File,
 }
+
+

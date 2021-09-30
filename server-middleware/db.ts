@@ -32,7 +32,7 @@ const client = new MongoClient(URI);
 let database = null;
 
 async function init() {
-  LOGGER.info({message: 'Creating connection to MongoDB...', DB, URI});
+  LOGGER.info({message: 'Creating connection to MongoDB...', DB, URI, LOOP_TIMER: process.env.PROVE_YOURSELF_LOOP_INTERVAL});
   try {
     await client.connect();
     database = client.db(DB)
