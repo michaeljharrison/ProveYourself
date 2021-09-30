@@ -73,12 +73,30 @@ export async function updateUploadingStatus(code: string) {
   return true;
 };
 
-
-
-
-export async function updateVerificationStatus(code: string, verification: Verification, verificationProof: any, file: any) {
+export async function updateStatus(code:string, status: POI_STATUS) {
   const requests = database.collection('requests');
-  await requests.updateOne({code}, {$set: {status: verification.verified , verification, verifiedOn: new Date(), verificationProof, file}});
+  await requests.updateOne({code}, {$set: {status}});
+  return true;
+}
+
+export async function updateVerificationProof(code: string, proof: any) {
+  const requests = database.collection('requests');
+  await requests.updateOne({code}, {$set: {verificationProof: proof}});
+  return true;
+};
+
+export async function getPendingProofs() {
+  const requests = database.collection('requests');
+  const pending = await requests.find({status: POI_STATUS.UPLOADING}).toArray();
+  return pending;
+}
+
+
+
+
+export async function updateVerificationStatus(code: string, verification: Verification, verificationProof: any, file: any, status: POI_STATUS) {
+  const requests = database.collection('requests');
+  await requests.updateOne({code}, {$set: { status, verification, verifiedOn: new Date(), verificationProof, file}});
   return true;
 };
 

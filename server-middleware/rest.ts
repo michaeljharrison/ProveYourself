@@ -6,9 +6,11 @@ import crypto from 'crypto';
 import { v4 as uuidv4 } from 'uuid';
 // eslint-disable-next-line
 import colors from 'colors';
+import _ from 'lodash';
+import { Db } from 'mongodb';
 import { POI, POI_STATUS, Verification } from '../store/types';
 import {computerVisionFromFile} from './OCR'
-import {create, get, updateCreatedStatus, updateUploadingStatus, updateVerificationStatus} from './db'
+import {create, get, getPendingProofs, updateCreatedStatus, updateStatus, updateUploadingStatus, updateVerificationProof, updateVerificationStatus} from './db'
 import { checkUpload } from './poi';
 import { anchorPOI, getCertificate, hashImage } from './pdb';
 const { promisify } = require('util')
@@ -101,7 +103,7 @@ app.post('/get', async (req: any, res: any) => {
   const code = req.body;
   // Save the request to the database.
   const getRes = await get(code.code);
-  LOGGER.debug({message:'Result of find operation', code: code.code, getRes });
+  LOGGER.debug({message:'Result of find operation', code: code.code, status: getRes.status });
   if(getRes) {
       res.json({ok: 1, ...getRes})
   } else {
@@ -149,7 +151,7 @@ app.post('/upload/:code', upload.single('file'), async (req: any, res: any) => {
 
         // Don't bother proving if the verification fails.
         if(verificationResult.verified === POI_STATUS.FAILED) {
-          const writeResult = await updateVerificationStatus(code, verificationResult, {}, fileData)
+          const writeResult = await updateVerificationStatus(code, verificationResult, {}, fileData, POI_STATUS.FAILED)
           LOGGER.debug({message: 'Update Result', writeResult})
           res.status(401).send(verificationResult);
           return;
@@ -165,22 +167,23 @@ app.post('/upload/:code', upload.single('file'), async (req: any, res: any) => {
         const hashSum = crypto.createHash('sha256');
         hashSum.update(fileBuffer);
         poi.file.hashedBinaryData = hashSum.digest('hex');
+        poi.file.binaryData = fileBuffer
         delete poi._id;
 
         // Update database to UPLOADING before submitting proof.
-        await updateUploadingStatus(code);
+        await updateVerificationStatus(code, verificationResult, {}, fileData, POI_STATUS.UPLOADING)
         res.status(200).send({ok: 1, });
-
+/* 
         // Submit Proof.
         LOGGER.debug({message:'Creating proof for verification poi', poi });
         const proofResult = await anchorPOI(poi)
         LOGGER.debug({message:'Result of anchor verification proof', poi, proofResult });
 
-        poi.file.binaryData = fileBuffer
-
         // Update DB
-        const writeResult = await updateVerificationStatus(code, verificationResult, proofResult, fileData)
+        let writeResult = await updateVerificationProof(code, proofResult)
         LOGGER.debug({message: 'Update Result', writeResult})
+        writeResult = await updateStatus(code, POI_STATUS.VERIFIED)
+        LOGGER.debug({message: 'Update Result', writeResult}) */
 
         // Clean File
         const deleteFileResult = await unlinkAsync(filePath);
@@ -323,5 +326,42 @@ app.get('/download/:code', async (req: any, res: any) => {
     res.status(500).send(e);
   }
 })
+
+/**
+ * Debounced function to ensure we only submit a proof every 5 minutes.
+ * The function will be triggered on the first submitProof, and the last (trailing and leading).
+ */
+ const debouncedCheckProofs = _.debounce(
+  async () => {
+    // Run a find to get a list of non-proven proofs.
+    const pending = await getPendingProofs();
+    // For each pending proof
+    pending.forEach(async (poi: POI) => {
+
+      const {code} = poi
+      // Submit new proof.
+      LOGGER.debug({message:'Creating additional proof for pending poi...', code: poi.code, status: poi.status });
+      const proofResult = await anchorPOI(poi)
+
+      // Check if still pending.
+      const oldPoi = await get(code);
+      if(oldPoi.status === POI_STATUS.UPLOADING) {
+        await updateVerificationProof(code, proofResult)
+        await updateStatus(code, POI_STATUS.VERIFIED)
+      }
+    })
+  },
+  30000,
+  {
+    leading: true,
+    trailing: true,
+  },
+);
+
+setInterval(() => {
+  LOGGER.debug({message: 'Checking for old proofs...'});
+  debouncedCheckProofs();
+}, 30000)
+
 
 module.exports = app

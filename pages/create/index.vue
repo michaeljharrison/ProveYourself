@@ -46,6 +46,7 @@
           <a-date-picker
             :default-value="expiry"
             :disabled="loading"
+            :format="dateFormat"
             :disabled-date="disabledDates"
             @change="handleExpiryChange"
           />
@@ -105,7 +106,8 @@
                 ],
               },
             ]"
-            :placeholder="dateOfBirth"
+            :format="dateFormat"
+            :default-value="dateOfBirth"
             :disabled-date="disabledDOB"
             :disabled="loading"
             @change="handleDOBChange"
@@ -173,8 +175,9 @@ export default {
   data() {
     return {
       formLayout: 'vertical',
+      dateFormat: 'DD/MM/YYYY',
       blockchain: constants.BLOCKCHAINS.HEDERA,
-      expiry: moment().add(1, 'week'),
+      expiry: moment().add(1, 'weeks'),
       dateOfBirth: moment().subtract(16, 'years'),
       document: constants.DOCUMENTS.DRIVERS_LICENSE,
       constants,
@@ -198,7 +201,8 @@ export default {
     handleExpiryChange(newExpiry: any) {
       this.expiry = newExpiry
     },
-    handleDOBChange(newDOB: any) {
+    handleDOBChange(newDOB: any, newDOBString: any) {
+      console.log(newDOBString)
       this.dob = newDOB
     },
     submit(e: Event) {

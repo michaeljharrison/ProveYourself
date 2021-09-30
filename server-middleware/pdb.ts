@@ -30,6 +30,7 @@ const LOGGER = winston.createLogger({
     ]
 });
 
+
 function buildTree(path: string, object: Object, builder: merkle.Builder) {
   _.forOwn(object, (value, key) => {
     if(_.isObject(value) && Object.keys(value).length > 0 ) {
