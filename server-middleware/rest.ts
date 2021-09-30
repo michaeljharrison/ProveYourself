@@ -330,6 +330,7 @@ app.get('/download/:code', async (req: any, res: any) => {
 
  const debouncedCheckValidationProofs = _.debounce(
   async () => {
+    LOGGER.debug({message: 'Checking for stale validation proofs...'});
     // Run a find to get a list of non-proven proofs.
     const pending = await getPendingValidationProofs();
     // For each pending proof
@@ -358,6 +359,7 @@ app.get('/download/:code', async (req: any, res: any) => {
 
  const debouncedCheckRequestProofs = _.debounce(
   async () => {
+    LOGGER.debug({message: 'Checking for stale request proofs...'});
     // Run a find to get a list of non-proven proofs.
     const pending = await getPendingRequestProofs();
     // For each pending proof
@@ -385,12 +387,10 @@ app.get('/download/:code', async (req: any, res: any) => {
 
 
 setInterval(() => {
-  LOGGER.debug({message: 'Checking for stale validation proofs...'});
   debouncedCheckValidationProofs();
 }, parseInt(process.env.PROVE_YOURSELF_LOOP_INTERVAL) || 180000)
 
 setInterval(() => {
-  LOGGER.debug({message: 'Checking for stale request proofs...'});
   debouncedCheckRequestProofs();
 }, parseInt(process.env.PROVE_YOURSELF_LOOP_INTERVAL) || 180000)
 
