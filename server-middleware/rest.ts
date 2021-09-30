@@ -10,7 +10,7 @@ import _ from 'lodash';
 import { Db } from 'mongodb';
 import { POI, POI_STATUS, Verification } from '../store/types';
 import {computerVisionFromFile} from './OCR'
-import {create, get, getPendingProofs, updateCreatedStatus, updateStatus, updateUploadingStatus, updateVerificationProof, updateVerificationStatus} from './db'
+import {create, get, getPendingProofs, getPendingRequestProofs, getPendingValidationProofs, updateCreatedStatus, updateStatus, updateUploadingStatus, updateVerificationProof, updateVerificationStatus} from './db'
 import { checkUpload } from './poi';
 import { anchorPOI, getCertificate, hashImage } from './pdb';
 const { promisify } = require('util')
@@ -89,21 +89,15 @@ app.post('/create', async (req: any, res: any) => {
   res.status(400).send({ok: 0, error: 'Failed to create record in levelDB.', result: createRes})
 }
 
-  // SubmitProof
-  LOGGER.debug({message:'Creating proof for initial poi', poi });
-  const proofResult = await anchorPOI(poi)
-
-  LOGGER.debug({message:'Result of anchor initial proof', poi, proofResult });
-  // Update the proof to created.
-  await updateCreatedStatus(code, proofResult)
+debouncedCheckRequestProofs();
 
 })
 
 app.post('/get', async (req: any, res: any) => {
   const code = req.body;
   // Save the request to the database.
-  const getRes = await get(code.code);
-  LOGGER.debug({message:'Result of find operation', code: code.code, status: getRes.status });
+  const getRes: POI = await get(code.code);
+  LOGGER.debug({message:'Result of find operation', code: code.code, status: getRes.status, email: getRes.email });
   if(getRes) {
       res.json({ok: 1, ...getRes})
   } else {
@@ -116,6 +110,7 @@ app.post('/upload/:code', upload.single('file'), async (req: any, res: any) => {
 
   // TODO Steganography embed information within the image.
   // TODO WATERMARK WITH LOWER BOUND
+  // TODO EXPIRE OLD PROOFS!
   try {
     const {params, body} = req;
     const {file} = req;
@@ -173,17 +168,8 @@ app.post('/upload/:code', upload.single('file'), async (req: any, res: any) => {
         // Update database to UPLOADING before submitting proof.
         await updateVerificationStatus(code, verificationResult, {}, fileData, POI_STATUS.UPLOADING)
         res.status(200).send({ok: 1, });
-/* 
-        // Submit Proof.
-        LOGGER.debug({message:'Creating proof for verification poi', poi });
-        const proofResult = await anchorPOI(poi)
-        LOGGER.debug({message:'Result of anchor verification proof', poi, proofResult });
 
-        // Update DB
-        let writeResult = await updateVerificationProof(code, proofResult)
-        LOGGER.debug({message: 'Update Result', writeResult})
-        writeResult = await updateStatus(code, POI_STATUS.VERIFIED)
-        LOGGER.debug({message: 'Update Result', writeResult}) */
+        debouncedCheckValidationProofs();
 
         // Clean File
         const deleteFileResult = await unlinkAsync(filePath);
@@ -327,14 +313,10 @@ app.get('/download/:code', async (req: any, res: any) => {
   }
 })
 
-/**
- * Debounced function to ensure we only submit a proof every 5 minutes.
- * The function will be triggered on the first submitProof, and the last (trailing and leading).
- */
- const debouncedCheckProofs = _.debounce(
+ const debouncedCheckValidationProofs = _.debounce(
   async () => {
     // Run a find to get a list of non-proven proofs.
-    const pending = await getPendingProofs();
+    const pending = await getPendingValidationProofs();
     // For each pending proof
     pending.forEach(async (poi: POI) => {
 
@@ -342,6 +324,7 @@ app.get('/download/:code', async (req: any, res: any) => {
       // Submit new proof.
       LOGGER.debug({message:'Creating additional proof for pending poi...', code: poi.code, status: poi.status });
       const proofResult = await anchorPOI(poi)
+      LOGGER.debug({message:'New Proof created for pending poi.', code: poi.code, status: poi.status });
 
       // Check if still pending.
       const oldPoi = await get(code);
@@ -351,17 +334,50 @@ app.get('/download/:code', async (req: any, res: any) => {
       }
     })
   },
-  30000,
+  parseInt(process.env.PROVE_YOURSELF_LOOP_INTERVAL) || 180000,
   {
     leading: true,
     trailing: true,
   },
 );
 
+ const debouncedCheckRequestProofs = _.debounce(
+  async () => {
+    // Run a find to get a list of non-proven proofs.
+    const pending = await getPendingRequestProofs();
+    // For each pending proof
+    pending.forEach(async (poi: POI) => {
+
+      const {code} = poi
+      // Submit new proof.
+      LOGGER.debug({message:'Creating additional proof for creating poi...', code: poi.code, status: poi.status });
+      const proofResult = await anchorPOI(poi)
+      LOGGER.debug({message:'New Proof created for creating poi.', code: poi.code, status: poi.status });
+
+      // Check if still pending.
+      const oldPoi = await get(code);
+      if(oldPoi.status === POI_STATUS.CREATING) {
+        await updateCreatedStatus(poi.code, proofResult)
+      }
+    })
+  },
+  parseInt(process.env.PROVE_YOURSELF_LOOP_INTERVAL) || 180000,
+  {
+    leading: true,
+    trailing: true,
+  },
+);
+
+
 setInterval(() => {
-  LOGGER.debug({message: 'Checking for old proofs...'});
-  debouncedCheckProofs();
-}, 30000)
+  LOGGER.debug({message: 'Checking for stale validation proofs...'});
+  debouncedCheckValidationProofs();
+}, parseInt(process.env.PROVE_YOURSELF_LOOP_INTERVAL) || 180000)
+
+setInterval(() => {
+  LOGGER.debug({message: 'Checking for stale request proofs...'});
+  debouncedCheckRequestProofs();
+}, parseInt(process.env.PROVE_YOURSELF_LOOP_INTERVAL) || 180000)
 
 
 module.exports = app

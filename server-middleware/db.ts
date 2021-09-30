@@ -85,12 +85,17 @@ export async function updateVerificationProof(code: string, proof: any) {
   return true;
 };
 
-export async function getPendingProofs() {
+export async function getPendingRequestProofs() {
+  const requests = database.collection('requests');
+  const pending = await requests.find({status: POI_STATUS.CREATING}).toArray();
+  return pending;
+}
+
+export async function getPendingValidationProofs() {
   const requests = database.collection('requests');
   const pending = await requests.find({status: POI_STATUS.UPLOADING}).toArray();
   return pending;
 }
-
 
 
 
