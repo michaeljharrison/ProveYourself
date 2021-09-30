@@ -89,7 +89,13 @@ app.post('/create', async (req: any, res: any) => {
   res.status(400).send({ok: 0, error: 'Failed to create record in levelDB.', result: createRes})
 }
 
-debouncedCheckRequestProofs();
+  // SubmitProof
+  LOGGER.debug({message:'Creating proof for initial poi', poi });
+  const proofResult = await anchorPOI(poi)
+
+  LOGGER.debug({message:'Result of anchor initial proof', poi, proofResult });
+  // Update the proof to created.
+  await updateCreatedStatus(code, proofResult) 
 
 })
 
@@ -110,7 +116,7 @@ app.post('/upload/:code', upload.single('file'), async (req: any, res: any) => {
 
   // TODO Steganography embed information within the image.
   // TODO WATERMARK WITH LOWER BOUND
-  // TODO EXPIRE OLD PROOFS!
+  // TODO EXPIRE REQUESTS
   try {
     const {params, body} = req;
     const {file} = req;
@@ -169,7 +175,16 @@ app.post('/upload/:code', upload.single('file'), async (req: any, res: any) => {
         await updateVerificationStatus(code, verificationResult, {}, fileData, POI_STATUS.UPLOADING)
         res.status(200).send({ok: 1, });
 
-        debouncedCheckValidationProofs();
+        // Submit Proof.
+        LOGGER.debug({message:'Creating proof for verification poi', poi });
+        const proofResult = await anchorPOI(poi)
+        LOGGER.debug({message:'Result of anchor verification proof', poi, proofResult });
+
+        // Update DB
+        let writeResult = await updateVerificationProof(code, proofResult)
+        LOGGER.debug({message: 'Update Result', writeResult})
+        writeResult = await updateStatus(code, POI_STATUS.VERIFIED)
+        LOGGER.debug({message: 'Update Result', writeResult})
 
         // Clean File
         const deleteFileResult = await unlinkAsync(filePath);
@@ -334,7 +349,7 @@ app.get('/download/:code', async (req: any, res: any) => {
       }
     })
   },
-  parseInt(process.env.PROVE_YOURSELF_LOOP_INTERVAL) || 180000,
+  30000,
   {
     leading: true,
     trailing: true,
@@ -361,7 +376,7 @@ app.get('/download/:code', async (req: any, res: any) => {
       }
     })
   },
-  parseInt(process.env.PROVE_YOURSELF_LOOP_INTERVAL) || 180000,
+  30000,
   {
     leading: true,
     trailing: true,
