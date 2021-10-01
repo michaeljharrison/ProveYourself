@@ -111,7 +111,7 @@ LOGGER.debug({message: 'Result of Submitting Proof', code: poi.code, proof, tree
 return {tree, proof};
 } catch(e) {
   LOGGER.error({message: 'SDK SubmitProof failed with error.', e})
-  return null
+  return {tree, proof: {}}
 }
 
 }
