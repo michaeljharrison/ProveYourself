@@ -116,9 +116,7 @@ app.post('/get', async (req: any, res: any) => {
 
 app.post('/upload/:code', upload.single('file'), async (req: any, res: any) => {
 
-  // TODO Steganography embed information within the image.
-  // TODO WATERMARK WITH LOWER BOUND
-  // TODO EXPIRE REQUESTS
+
   try {
     const {params, body} = req;
     const {file} = req;
@@ -141,12 +139,6 @@ app.post('/upload/:code', upload.single('file'), async (req: any, res: any) => {
         // Run OCR over file.
         const ocrResult = await computerVisionFromFile(filePath)
         LOGGER.debug({message: 'OCR Result', ocrResult})
-
-        // TODO Add a new stage for facial recognition, make sure it's a photo of a person.
-
-        // TODO Check for a specific document number (EG License Number)
-
-        // TODO Australia Post Drivers API real.
 
         // Verify OCR Data for code.
         const verificationResult: Verification = await checkUpload(poi, ocrResult[0]);
