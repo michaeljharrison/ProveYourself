@@ -5,8 +5,6 @@ const crypto = require('crypto');
 const winston = require('winston');
 const axios = require('axios').default;
 const _ = require('lodash');
-// Create a new anchor client using your credentials
-const client = anchor.connect(anchor.withCredentials(process.env.PROVENDB_SDK_KEY || "sdk_key"));
 const COMP_VAULT_KEY = process.env.PROVENDB_COMP_VAULT_KEY || "cv_key"
 const WINSTON_FORMAT = winston.format.combine(
   winston.format.colorize({ all: true }),
@@ -83,6 +81,9 @@ export async function getCertificate(rowProof: any, rowData: any, metadata: any)
 }
 
 export async function anchorPOI(poi: POI) {
+  // Create Client
+  // Create a new anchor client using your credentials
+  const client = anchor.connect(anchor.withCredentials(process.env.PROVENDB_SDK_KEY || "sdk_key"), anchor.withInsecure((process.env.PROVENDB_SDK_INSECURE === 'true' && true)|| false));
 
   // Create Builder
   const builder = merkle.newBuilder("sha-256");
@@ -106,7 +107,10 @@ export async function anchorPOI(poi: POI) {
 try {
   const proof = await client.submitProof(tree.getRoot(), 
   anchor.submitProofWithAnchorType(anchor.Anchor.Type.HEDERA_MAINNET), // Optional. Add your anchor type.
-  anchor.submitProofWithAwaitConfirmed(false)); // Optional. Resolve the promise only when the proof is confirmed.
+  anchor.submitProofWithAwaitConfirmed((process.env.PROVENDB_SDK_AWAIT === 'true' && true)|| false),
+  anchor.submitProofWithSkipBatching((process.env.PROVENDB_SDK_SKIP === 'true' && true)|| false)
+); // Optional. Resolve the promise only when the proof is confirmed.
+
 LOGGER.debug({message: 'Result of Submitting Proof', code: poi.code, proof, tree})
 return {tree, proof};
 } catch(e) {
@@ -117,6 +121,7 @@ return {tree, proof};
 }
 
 export async function checkProof(proof) {
+  const client = anchor.connect(anchor.withCredentials(process.env.PROVENDB_SDK_KEY || "sdk_key"), anchor.withInsecure((process.env.PROVENDB_SDK_INSECURE === 'true' && true)|| false));
   const result = await client.getProof(proof.id, proof.anchorType)
   return result;
 }
