@@ -337,7 +337,7 @@ app.get('/download/:code', async (req: any, res: any) => {
     const pending = await getPendingValidationProofs();
     // For each pending proof
     pending.forEach(async (poi: POI) => {
-      LOGGER.debug({message:'Picked up stale validation proof', code: poi.code, status: poi.status, proof: poi.verificationProof && poi.verificationProof.proof });
+      LOGGER.debug({message:'Picked up stale validation proof', code: poi.code, status: poi.status, proof: poi.verificationProof});
       const {code} = poi
 
       // Check proof (if existing) first before submitting.
@@ -353,10 +353,12 @@ app.get('/download/:code', async (req: any, res: any) => {
       } else {
         // No proof created, create new proof.
         LOGGER.debug({message:'Creating new proof for Validation poi...', code: poi.code, status: poi.status });
-        delete poi.verificationProof;
         const proofResult = await anchorPOI(poi)
         LOGGER.debug({message:'New Proof created for Validation poi.', code: poi.code, status: poi.status, sizeOfProof: sizeof(proofResult), sizeOfDoc: sizeof(poi) });
-        await updateVerificationProof(code, proofResult)
+        // Check if finished in mean time (anchorPOI can take some time)
+        const oldPoi: POI = await get(poi.code);
+        if(oldPoi.status === POI_STATUS.UPLOADING)
+          await updateVerificationProof(code, proofResult)
       }
     })
   },
@@ -392,7 +394,9 @@ app.get('/download/:code', async (req: any, res: any) => {
              LOGGER.debug({message:'Creating new proof for request poi...', code: poi.code, status: poi.status });
              const proofResult = await anchorPOI(poi)
              LOGGER.debug({message:'New Proof created for request poi.', code: poi.code, status: poi.status, sizeOfProof: sizeof(proofResult), sizeOfDoc: sizeof(poi) });
-             await updateInitalProof(code, proofResult);
+             const oldPoi: POI = await get(poi.code);
+             if(oldPoi.status === POI_STATUS.CREATING)
+              await updateInitalProof(code, proofResult);
            }
     })
   },

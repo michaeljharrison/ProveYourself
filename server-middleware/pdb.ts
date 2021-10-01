@@ -89,19 +89,31 @@ export async function anchorPOI(poi: POI) {
 
   // Filter POI (remove binary file data)
   const filteredPOI = poi;
+  if(filteredPOI.verificationProof) {
+    delete filteredPOI.verificationProof;
+  }
+  if(filteredPOI.initialProof) {
+    delete filteredPOI.initialProof;
+  }
   if(filteredPOI.file && filteredPOI.file.binaryData)
     delete filteredPOI.file.binaryData;
   // Build tree from POI document (recursive).
   buildTree('', filteredPOI, builder);
   const tree = builder.build();
-  LOGGER.debug({message: 'Result of Building Tree for POI', tree})
+  LOGGER.debug({message: 'Tree built, submitting proof...', tree})
 
 // Submit your proof.
-const proof = await client.submitProof(tree.getRoot(), 
-    anchor.submitProofWithAnchorType(anchor.Anchor.Type.HEDERA_MAINNET), // Optional. Add your anchor type.
-    anchor.submitProofWithAwaitConfirmed(false)); // Optional. Resolve the promise only when the proof is confirmed.
-  LOGGER.debug({message: 'Result of Submitting Proof', code: poi.code, proof, tree})
-  return {tree, proof};
+try {
+  const proof = await client.submitProof(tree.getRoot(), 
+  anchor.submitProofWithAnchorType(anchor.Anchor.Type.HEDERA_MAINNET), // Optional. Add your anchor type.
+  anchor.submitProofWithAwaitConfirmed(false)); // Optional. Resolve the promise only when the proof is confirmed.
+LOGGER.debug({message: 'Result of Submitting Proof', code: poi.code, proof, tree})
+return {tree, proof};
+} catch(e) {
+  LOGGER.error({message: 'SDK SubmitProof failed with error.', e})
+  return null
+}
+
 }
 
 export async function checkProof(proof) {
