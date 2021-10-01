@@ -36,7 +36,7 @@ function buildTree(path: string, object: Object, builder: merkle.Builder) {
     if(_.isObject(value) && Object.keys(value).length > 0 ) {
       // Value is an object with keys, recursively build object.
       buildTree(path + key + '.', value, builder);
-    } else {
+    } else if(value) {
       // Value is not an object, add string value.
       builder.add(path + key, Buffer.from(value.toString()))
     }
