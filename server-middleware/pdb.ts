@@ -89,11 +89,8 @@ export async function anchorPOI(poi: POI) {
 
   // Filter POI (remove binary file data)
   const filteredPOI = poi;
-  LOGGER.debug({message: 'Before removing BinaryData', file: filteredPOI && filteredPOI.file})
   if(filteredPOI.file && filteredPOI.file.binaryData)
     delete filteredPOI.file.binaryData;
-  LOGGER.debug({message: 'AFter removing BinaryData', file: filteredPOI && filteredPOI.file})
-
   // Build tree from POI document (recursive).
   buildTree('', filteredPOI, builder);
   const tree = builder.build();
@@ -102,7 +99,12 @@ export async function anchorPOI(poi: POI) {
 // Submit your proof.
 const proof = await client.submitProof(tree.getRoot(), 
     anchor.submitProofWithAnchorType(anchor.Anchor.Type.HEDERA_MAINNET), // Optional. Add your anchor type.
-    anchor.submitProofWithAwaitConfirmed(true)); // Optional. Resolve the promise only when the proof is confirmed.
-
+    anchor.submitProofWithAwaitConfirmed(false)); // Optional. Resolve the promise only when the proof is confirmed.
+  LOGGER.debug({message: 'Result of Submitting Proof', code: poi.code, proof, tree})
   return {tree, proof};
+}
+
+export async function checkProof(proof) {
+  const result = await client.getProof(proof.id, proof.anchorType)
+  return result;
 }

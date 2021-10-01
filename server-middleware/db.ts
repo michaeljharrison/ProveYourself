@@ -79,6 +79,12 @@ export async function updateStatus(code:string, status: POI_STATUS) {
   return true;
 }
 
+export async function updateInitalProof(code: string, proof: any) {
+  const requests = database.collection('requests');
+  await requests.updateOne({code}, {$set: {initialProof: proof}});
+  return true;
+};
+
 export async function updateVerificationProof(code: string, proof: any) {
   const requests = database.collection('requests');
   await requests.updateOne({code}, {$set: {verificationProof: proof}});

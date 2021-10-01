@@ -12,6 +12,11 @@ export enum POI_STATUS {
   VERIFIED = "VERIFIED",
 }
 
+export enum PROOF_STATUS {
+  CONFIRMED = "CONFIRMED",
+  CREATING = "CREATING"
+}
+
 export interface Verification {
   verified: POI_STATUS,
   verifiedConfidence: number,

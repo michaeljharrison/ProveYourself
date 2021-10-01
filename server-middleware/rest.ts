@@ -8,11 +8,11 @@ import { v4 as uuidv4 } from 'uuid';
 import colors from 'colors';
 import _ from 'lodash';
 import { Db } from 'mongodb';
-import { POI, POI_STATUS, Verification } from '../store/types';
+import { POI, POI_STATUS, PROOF_STATUS, Verification } from '../store/types';
 import {computerVisionFromFile} from './OCR'
-import {create, get, getPendingProofs, getPendingRequestProofs, getPendingValidationProofs, updateCreatedStatus, updateStatus, updateUploadingStatus, updateVerificationProof, updateVerificationStatus} from './db'
+import {create, get, getPendingProofs, getPendingRequestProofs, getPendingValidationProofs, updateCreatedStatus, updateInitalProof, updateStatus, updateUploadingStatus, updateVerificationProof, updateVerificationStatus} from './db'
 import { checkUpload } from './poi';
-import { anchorPOI, getCertificate, hashImage } from './pdb';
+import { anchorPOI, checkProof, getCertificate, hashImage } from './pdb';
 const { promisify } = require('util')
 const fs = require('fs')
 const JSZip = require('jszip')
@@ -90,13 +90,14 @@ app.post('/create', async (req: any, res: any) => {
   res.status(400).send({ok: 0, error: 'Failed to create record in levelDB.', result: createRes})
 }
 
-  // SubmitProof
+ /*  // SubmitProof
   LOGGER.debug({message:'Creating proof for initial poi', poi });
   const proofResult = await anchorPOI(poi)
 
   LOGGER.debug({message:'Result of anchor initial proof', poi, proofResult });
   // Update the proof to created.
-  await updateCreatedStatus(code, proofResult) 
+  await updateCreatedStatus(code, proofResult)  */
+  debouncedCheckRequestProofs();
 
 })
 
@@ -174,7 +175,7 @@ app.post('/upload/:code', upload.single('file'), async (req: any, res: any) => {
         await updateVerificationStatus(code, verificationResult, {}, fileData, POI_STATUS.UPLOADING)
         res.status(200).send({ok: 1, });
 
-        // Submit Proof.
+       /*  // Submit Proof.
         LOGGER.debug({message:'Creating proof for verification poi', poi });
         const proofResult = await anchorPOI(poi)
         LOGGER.debug({message:'Result of anchor verification proof', poi, proofResult });
@@ -183,7 +184,9 @@ app.post('/upload/:code', upload.single('file'), async (req: any, res: any) => {
         let writeResult = await updateVerificationProof(code, proofResult)
         LOGGER.debug({message: 'Update Result', writeResult})
         writeResult = await updateStatus(code, POI_STATUS.VERIFIED)
-        LOGGER.debug({message: 'Update Result', writeResult})
+        LOGGER.debug({message: 'Update Result', writeResult}) */
+
+        debouncedCheckValidationProofs();
 
         // Clean File
         const deleteFileResult = await unlinkAsync(filePath);
@@ -334,23 +337,30 @@ app.get('/download/:code', async (req: any, res: any) => {
     const pending = await getPendingValidationProofs();
     // For each pending proof
     pending.forEach(async (poi: POI) => {
-
+      LOGGER.debug({message:'Picked up stale validation proof', code: poi.code, status: poi.status, proof: poi.verificationProof && poi.verificationProof.proof });
       const {code} = poi
-      // Submit new proof.
-      LOGGER.debug({message:'Creating additional proof for pending poi...', code: poi.code, status: poi.status });
-      delete poi.verificationProof;
-      const proofResult = await anchorPOI(poi)
-      LOGGER.debug({message:'New Proof created for pending poi.', code: poi.code, status: poi.status, sizeOfProof: sizeof(proofResult), sizeOfDoc: sizeof(poi) });
 
-      // Check if still pending.
-      const oldPoi = await get(code);
-      if(oldPoi.status === POI_STATUS.UPLOADING) {
+      // Check proof (if existing) first before submitting.
+      let proofStatus = null;
+      if(poi.verificationProof && poi.verificationProof.proof && poi.verificationProof.proof.id) {
+        proofStatus = await checkProof(poi.verificationProof.proof)
+        LOGGER.debug({message:'Current Status of Validation Proof', code: poi.code, status: poi.status, proofStatus });
+        if(proofStatus && proofStatus.status === PROOF_STATUS.CONFIRMED) {
+          // If complete, update database.
+          await updateVerificationProof(code, {tree: poi.verificationProof.tree, proof: proofStatus})
+          await updateStatus(code, POI_STATUS.VERIFIED)
+        }
+      } else {
+        // No proof created, create new proof.
+        LOGGER.debug({message:'Creating new proof for Validation poi...', code: poi.code, status: poi.status });
+        delete poi.verificationProof;
+        const proofResult = await anchorPOI(poi)
+        LOGGER.debug({message:'New Proof created for Validation poi.', code: poi.code, status: poi.status, sizeOfProof: sizeof(proofResult), sizeOfDoc: sizeof(poi) });
         await updateVerificationProof(code, proofResult)
-        await updateStatus(code, POI_STATUS.VERIFIED)
       }
     })
   },
-  30000,
+  3000,
   {
     leading: true,
     trailing: true,
@@ -364,21 +374,29 @@ app.get('/download/:code', async (req: any, res: any) => {
     const pending = await getPendingRequestProofs();
     // For each pending proof
     pending.forEach(async (poi: POI) => {
+      LOGGER.debug({message:'Picked up stale request proof', code: poi.code, status: poi.status });
 
       const {code} = poi
-      // Submit new proof.
-      LOGGER.debug({message:'Creating additional proof for creating poi...', code: poi.code, status: poi.status });
-      const proofResult = await anchorPOI(poi)
-      LOGGER.debug({message:'New Proof created for creating poi.', code: poi.code, status: poi.status });
-
-      // Check if still pending.
-      const oldPoi = await get(code);
-      if(oldPoi.status === POI_STATUS.CREATING) {
-        await updateCreatedStatus(poi.code, proofResult)
-      }
+           // Check proof (if existing) first before submitting.
+           let proofStatus = null;
+           if(poi.initialProof && poi.initialProof.proof.id) {
+             proofStatus = await checkProof(poi.initialProof.proof)
+             LOGGER.debug({message:'Current Status of request Proof', code: poi.code, status: poi.status, proofStatus });
+             if(proofStatus && proofStatus.status === PROOF_STATUS.CONFIRMED) {
+               // If complete, update database.
+               await updateCreatedStatus(code, {tree: poi.initialProof.tree, proof: proofStatus})
+             }
+     
+           } else {
+             // No proof created, create new proof.
+             LOGGER.debug({message:'Creating new proof for request poi...', code: poi.code, status: poi.status });
+             const proofResult = await anchorPOI(poi)
+             LOGGER.debug({message:'New Proof created for request poi.', code: poi.code, status: poi.status, sizeOfProof: sizeof(proofResult), sizeOfDoc: sizeof(poi) });
+             await updateInitalProof(code, proofResult);
+           }
     })
   },
-  30000,
+  3000,
   {
     leading: true,
     trailing: true,
@@ -388,11 +406,11 @@ app.get('/download/:code', async (req: any, res: any) => {
 
 setInterval(() => {
   debouncedCheckValidationProofs();
-}, parseInt(process.env.PROVE_YOURSELF_LOOP_INTERVAL) || 180000)
+}, parseInt(process.env.PROVE_YOURSELF_LOOP_INTERVAL) || 30000)
 
 setInterval(() => {
   debouncedCheckRequestProofs();
-}, parseInt(process.env.PROVE_YOURSELF_LOOP_INTERVAL) || 180000)
+}, parseInt(process.env.PROVE_YOURSELF_LOOP_INTERVAL) || 30000)
 
 
 module.exports = app
