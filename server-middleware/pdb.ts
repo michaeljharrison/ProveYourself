@@ -83,7 +83,7 @@ export async function getCertificate(rowProof: any, rowData: any, metadata: any)
 export async function anchorPOI(poi: POI) {
   // Create Client
   // Create a new anchor client using your credentials
-  const client = anchor.connect(anchor.withCredentials(process.env.PROVENDB_SDK_KEY || "sdk_key"), anchor.withInsecure((process.env.PROVENDB_SDK_INSECURE === 'true' && true)|| false));
+  const client = anchor.connect(anchor.withCredentials(process.env.PROVENDB_SDK_KEY || "sdk_key"), anchor.withInsecure((process.env.PROVENDB_SDK_INSECURE === 'true' && true)|| false), anchor.withAddress(process.env.PROVENDB_SDK_ENDPOINT || 'anchor.proofable.io:443'));
 
   // Create Builder
   const builder = merkle.newBuilder("sha-256");
