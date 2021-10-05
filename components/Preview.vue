@@ -21,6 +21,7 @@ export default {
 
 <style lang="scss" scoped>
 .preview {
+  font-family: monospace;
   max-width: 45vw;
   flex-grow: 1;
   display: flex;
