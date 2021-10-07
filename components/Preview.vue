@@ -21,6 +21,16 @@ export default {
 
 <style lang="scss" scoped>
 .preview {
+  h1,
+  h2,
+  h3,
+  h4,
+  p,
+  span,
+  button {
+    font-family: 'Inconsolata', sans-serif;
+  }
+
   font-family: monospace;
   max-width: 45vw;
   flex-grow: 1;

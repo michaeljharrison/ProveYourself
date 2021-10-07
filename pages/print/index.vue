@@ -43,7 +43,9 @@
     <div v-else-if="poi" class="container" :style="{}">
       <Preview
         :print="true"
-        :code="poi.initialProof.proof.metadata.txnId.substring(0, 20)"
+        :code="
+          poi.initialProof.proof.metadata.txnId.substring(0, 20).toUpperCase()
+        "
         :name="poi.name"
         :date="moment()"
       />

@@ -113,7 +113,11 @@
             </p>
             <Preview
               :print="false"
-              :code="poi.initialProof.proof.metadata.txnId.substring(0, 20)"
+              :code="
+                poi.initialProof.proof.metadata.txnId
+                  .substring(0, 20)
+                  .toUpperCase()
+              "
               :name="poi.name"
               :date="moment()"
             />
