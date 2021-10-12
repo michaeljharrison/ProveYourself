@@ -5,7 +5,7 @@ const Path = require('path')
 const fs = require('fs')
 const nodeHtmlToImage = require('node-html-to-image')
 
-const LOOP_ITERATIONS = 5
+const LOOP_ITERATIONS = 20
 const TIMEOUT = 120000
 jest.setTimeout(TIMEOUT)
 
@@ -94,6 +94,13 @@ test(`It Can OCR ${LOOP_ITERATIONS} good quality codes`, async () => {
         justify-content: center;
         align-items: center;
       "><h1 style="font-family: 'Inconsolata', sans-serif;">${code}</h1></body></html>`,
+        options: {
+          puppeteerArgs: {
+            headless: false,
+            args: ['--no-sandbox'],
+            executablePath: '/usr/local/bin/chromium',
+          },
+        },
       })
       const filePath = Path.join(__dirname, `${code}.png`)
 
@@ -102,6 +109,9 @@ test(`It Can OCR ${LOOP_ITERATIONS} good quality codes`, async () => {
       const poiResult = await checkUpload(code, ocrResult[0])
       if (poiResult.verified === POI_STATUS.FAILED) {
         results.fail++
+        console.log('Failed Test Code')
+        console.log(code)
+        console.log(poiResult)
       } else if (poiResult.verified === POI_STATUS.VERIFIED) {
         results.pass++
       }
