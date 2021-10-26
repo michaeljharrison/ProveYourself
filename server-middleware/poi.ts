@@ -19,8 +19,8 @@ export function checkUpload(poi: any, ocrResult: ReadResult): Verification {
   const verifiedConfidence = 0
   const lineFound = 0
   const wordFound = 0
-  const joiningWords = false
-  const joinedWord = ''
+  let joiningWords = false
+  let joinedWord = ''
   let result
   const substitutes = [
     { from: 'O', to: '0' },
@@ -32,8 +32,37 @@ export function checkUpload(poi: any, ocrResult: ReadResult): Verification {
   if (lines) {
     // Iterate through each line
     lines.forEach((line, lineNumber) => {
+      if (result && result.verified === POI_STATUS.VERIFIED) {
+        return result
+      }
       const { words } = line
-      // Iterate through each word, searching for a match.
+      // Iterate through each word, searching for WITHOUT SUBS
+      words.forEach((word, wordNumber) => {
+        result = checkWord(
+          word,
+          joinedWord,
+          verificationCode,
+          verified,
+          verifiedConfidence,
+          lineFound,
+          wordFound,
+          wordNumber,
+          lineNumber,
+          joiningWords
+        )
+        // console.log(result)
+        if (result && result.result === 0) {
+          // No result yet, but possibly a joining word.
+          joiningWords = result.joiningWords
+          joinedWord = result.joinedWord
+        } else if (result && result.verified === POI_STATUS.VERIFIED) {
+          return result
+        }
+      })
+
+      // If no match has been found yet, iterate through each word again, this time with substitutions.
+      joinedWord = ''
+      joiningWords = false
       words.forEach((word, wordNumber) => {
         result = checkWord(
           word,
@@ -55,7 +84,6 @@ export function checkUpload(poi: any, ocrResult: ReadResult): Verification {
         // If no match has been found yet, run through the substitutes array trying to find a correct match.
         substitutes.forEach((sub) => {
           if (word.text.includes(sub.from)) {
-            debugger
             result = checkWord(
               {
                 text: word.text.replace(RegExp(sub.from, 'g'), sub.to),
@@ -126,10 +154,19 @@ function checkWord(
   joiningWords: any
 ) {
   if (joinedWord) {
-    console.log(`${joinedWord} + ${word.text} === ${verificationCode}`)
+    console.log(
+      `${joinedWord} + ${word.text} === ${verificationCode} (${
+        joinedWord + word.text === verificationCode
+      })`
+    )
   } else {
-    console.log(`${word.text} === ${verificationCode}`)
+    console.log(
+      `${word.text} === ${verificationCode} (${
+        joinedWord === verificationCode
+      })`
+    )
   }
+
   if (word.text === verificationCode) {
     verified = POI_STATUS.VERIFIED
     verifiedConfidence = word.confidence
@@ -142,7 +179,7 @@ function checkWord(
       wordFound,
       verificationCode,
     }
-  } else if (joiningWords) {
+  } else if (joinedWord) {
     // We already have the starting prefix, see if this is a continuation of the code.
     const remainingCode = verificationCode.substring(joinedWord.length)
     if (remainingCode.lastIndexOf(word.text, 0) === 0) {
@@ -164,12 +201,24 @@ function checkWord(
       }
     } else {
       // Not a matching suffix, restart.
-      joinedWord = ''
-      joiningWords = false
+      return {
+        result: 0,
+        joinedWord: '',
+        joiningWords: false,
+      }
     }
   } else if (verificationCode.lastIndexOf(word.text, 0) === 0) {
     // Current word is a starting prefix.
-    joiningWords = true
-    joinedWord = word.text
+    return {
+      result: 0,
+      joinedWord: word.text,
+      joiningWords: true,
+    }
+  } else {
+    return {
+      result: 0,
+      joinedWord,
+      joiningWords,
+    }
   }
 }
