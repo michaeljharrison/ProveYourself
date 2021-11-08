@@ -5,7 +5,7 @@
       <h2>Blockchain Immutability meets Proof of Identity.</h2>
       <a-result status="success">
         <template #icon>
-          <a-steps :current="3" size="large">
+          <a-steps :current="3">
             <a-step
               title="Create"
               description="Create a Proof of Identity Request"

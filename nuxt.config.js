@@ -17,6 +17,11 @@ export default {
   // Server Middleware
   serverMiddleware: [{ path: '/api', handler: '~/server-middleware/rest.ts' }],
 
+  // Storybook:
+  storybook: {
+
+  },
+
   server: {
     port: 8000, // default: 3000
     host: '0.0.0.0', // default: localhost

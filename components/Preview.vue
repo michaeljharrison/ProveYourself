@@ -10,6 +10,7 @@
 import moment from 'moment'
 import 'moment/locale/en-au'
 export default {
+  name: 'Preview',
   props: ['code', 'name', 'date', 'print'],
   data() {
     return {
