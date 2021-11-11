@@ -183,6 +183,7 @@
           sub-title="Your proof of identity is being anchored on the blockchain, this may take a few minutes..."
         >
           <template #icon>
+            <p class="message">{{ poi && poi.message }}</p>
             <a-spin
               v-if="poi && poi.status === 'UPLOADING' && pollingProof"
               size="large"
@@ -309,7 +310,7 @@ export default {
         this.poi = poi
         this.code = fetchedCode
         if (poi.status === 'UPLOADING') {
-          this.pollingProof = 10
+          this.pollingProof = 5
           this.pollProof()
         }
       }
@@ -338,7 +339,7 @@ export default {
   methods: {
     async pollProof() {
       if (this.pollingProof <= 0) {
-        this.pollingProof = 10
+        this.pollingProof = 5
         let fetchedCode = this.$route.query.code
         if ((!fetchedCode || fetchedCode.length <= 0) && this.currentPOI) {
           fetchedCode = this.currentPOI.code

@@ -104,6 +104,18 @@ export async function updateVerificationProof(code: string, proof: any) {
   return true
 }
 
+export async function updateToken(code: string, token: any) {
+  const requests = database.collection('requests')
+  await requests.updateOne({ code }, { $set: { token } })
+  return true
+}
+
+export async function updateMessage(code: string, message: string) {
+  const requests = database.collection('requests')
+  await requests.updateOne({ code }, { $set: { message } })
+  return true
+}
+
 export async function getPendingRequestProofs() {
   const requests = database.collection('requests')
   const pending = await requests.find({ status: POI_STATUS.CREATING }).toArray()

@@ -7,23 +7,30 @@ import { v4 as uuidv4 } from 'uuid'
 import colors from 'colors'
 import _ from 'lodash'
 import { Db } from 'mongodb'
-import { POI, POI_STATUS, PROOF_STATUS, Verification } from '../store/types'
+import {
+  MESSAGES,
+  POI,
+  POI_STATUS,
+  PROOF_STATUS,
+  Verification,
+} from '../store/types'
 import { computerVisionFromFile } from './OCR'
 import {
   create,
   get,
   getExistingRequestProofs,
   getExistingValidationProofs,
-  getPendingProofs,
   getPendingRequestProofs,
   getPendingValidationProofs,
   updateCreatedStatus,
   updateInitalProof,
+  updateMessage,
   updateStatus,
-  updateUploadingStatus,
+  updateToken,
   updateVerificationProof,
   updateVerificationStatus,
 } from './db'
+import { tokenize } from './tokenize'
 import { checkUpload } from './poi'
 import { anchorPOI, checkProof, getCertificate, hashImage } from './pdb'
 const { promisify } = require('util')
@@ -92,6 +99,7 @@ app.post('/create', async (req: any, res: any) => {
   poi.code = code
   poi.status = POI_STATUS.CREATING
   poi.createdOn = new Date()
+  poi.message = MESSAGES.CREATING
 
   // Create initial database record.
   const createRes = await create(code, poi)
@@ -105,13 +113,7 @@ app.post('/create', async (req: any, res: any) => {
     })
   }
 
-  /*  // SubmitProof
-  LOGGER.debug({message:'Creating proof for initial poi', poi });
-  const proofResult = await anchorPOI(poi)
-
-  LOGGER.debug({message:'Result of anchor initial proof', poi, proofResult });
-  // Update the proof to created.
-  await updateCreatedStatus(code, proofResult)  */
+  updateMessage(code, MESSAGES.INITIAL_ANCHORING)
   debouncedCheckRequestProofs()
 })
 
@@ -154,6 +156,7 @@ app.post('/upload/:code', upload.single('file'), async (req: any, res: any) => {
           error: '404: No POI request for that code was found.',
         })
       } else {
+        updateMessage(poi.code, MESSAGES.VERIFYING)
         // Get File Path and file Hash.
         const filePath = path.join(__dirname, '..', 'uploads', file.filename)
         const fileData = {
@@ -208,6 +211,7 @@ app.post('/upload/:code', upload.single('file'), async (req: any, res: any) => {
         poi.file = fileData
 
         // Update database to UPLOADING before submitting proof.
+        updateMessage(poi.code, MESSAGES.FINAL_ANCHORING)
         await updateVerificationStatus(
           code,
           verificationResult,
@@ -216,17 +220,6 @@ app.post('/upload/:code', upload.single('file'), async (req: any, res: any) => {
           POI_STATUS.UPLOADING
         )
         res.status(200).send({ ok: 1 })
-
-        /*  // Submit Proof.
-        LOGGER.debug({message:'Creating proof for verification poi', poi });
-        const proofResult = await anchorPOI(poi)
-        LOGGER.debug({message:'Result of anchor verification proof', poi, proofResult });
-
-        // Update DB
-        let writeResult = await updateVerificationProof(code, proofResult)
-        LOGGER.debug({message: 'Update Result', writeResult})
-        writeResult = await updateStatus(code, POI_STATUS.VERIFIED)
-        LOGGER.debug({message: 'Update Result', writeResult}) */
 
         debouncedCheckValidationProofs()
 
@@ -462,6 +455,7 @@ const debouncedCheckValidationProofs = _.debounce(
         poi.verificationProof.proof &&
         poi.verificationProof.proof.id
       ) {
+        updateMessage(poi.code, MESSAGES.VERIFYING)
         proofStatus = await checkProof(poi.verificationProof.proof)
         LOGGER.debug({
           message: 'Current Status of Validation Proof',
@@ -475,7 +469,14 @@ const debouncedCheckValidationProofs = _.debounce(
             tree: poi.verificationProof.tree,
             proof: proofStatus,
           })
+          updateMessage(poi.code, MESSAGES.TOKENIZING)
+          const token = await tokenize(
+            poi.code,
+            poi.verificationProof.proof.hash
+          )
+          await updateToken(code, token)
           await updateStatus(code, POI_STATUS.VERIFIED)
+          updateMessage(poi.code, MESSAGES.COMPLETE)
         }
       } else {
         // No proof created, create new proof.
@@ -537,6 +538,7 @@ const debouncedCheckRequestProofs = _.debounce(
             tree: poi.initialProof.tree,
             proof: proofStatus,
           })
+          updateMessage(poi.code, MESSAGES.CREATED)
         } else if (proofStatus === false) {
           LOGGER.warn({
             message: 'Proof cannot be fetched, creating new...',
@@ -551,6 +553,7 @@ const debouncedCheckRequestProofs = _.debounce(
             status: poi.status,
           })
           const proofResult = await anchorPOI(poi)
+          updateMessage(poi.code, MESSAGES.INITIAL_ANCHORING)
           LOGGER.debug({
             message: 'New Proof created for request poi.',
             code: poi.code,
@@ -567,6 +570,7 @@ const debouncedCheckRequestProofs = _.debounce(
           status: poi.status,
         })
         const proofResult = await anchorPOI(poi)
+        updateMessage(poi.code, MESSAGES.INITIAL_ANCHORING)
         LOGGER.debug({
           message: 'New Proof created for request poi.',
           code: poi.code,
@@ -617,6 +621,7 @@ const debouncedCheckExistingRequestProofs = _.debounce(
           tree: poi.initialProof.tree,
           proof: proofStatus,
         })
+        updateMessage(poi.code, MESSAGES.CREATED)
       }
     })
   },
@@ -651,12 +656,15 @@ const debouncedCheckExistingValidationProofs = _.debounce(
       })
       if (proofStatus && proofStatus.status === PROOF_STATUS.CONFIRMED) {
         // If complete, update database.
-        // If complete, update database.
         await updateVerificationProof(code, {
           tree: poi.verificationProof.tree,
           proof: proofStatus,
         })
+        updateMessage(poi.code, MESSAGES.TOKENIZING)
+        const token = await tokenize(poi.code, poi.verificationProof.proof.hash)
+        await updateToken(code, token)
         await updateStatus(code, POI_STATUS.VERIFIED)
+        updateMessage(poi.code, MESSAGES.COMPLETE)
       }
     })
   },

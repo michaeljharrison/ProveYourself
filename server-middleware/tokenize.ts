@@ -24,42 +24,45 @@ const LOGGER = winston.createLogger({
 })
 
 const {
-    Client,
-    AccountId,
-    PrivateKey,
-    TokenCreateTransaction,
-    TokenId,
-    TokenType,
-    TokenSupplyType
-} = require("@hashgraph/sdk");
+  Client,
+  AccountId,
+  PrivateKey,
+  TokenCreateTransaction,
+  TokenId,
+  TokenType,
+  TokenSupplyType,
+} = require('@hashgraph/sdk')
 
- //Config client
- const privateKey = PrivateKey.fromString(process.env.HEDERA_PRIVATE_KEY);
- const accountId = AccountId.fromString(process.env.HEDERA_ACCOUNT_ID);
- const client = Client.forTestnet();
- client.setOperator(accountId, privateKey);
+// Config client
+const privateKey = PrivateKey.fromString(process.env.HEDERA_PRIVATE_KEY)
+const accountId = AccountId.fromString(process.env.HEDERA_ACCOUNT_ID)
+const client = Client.forTestnet()
+client.setOperator(accountId, privateKey)
 
-export async function tokenize(poi: POI) {
-  const tokenName = poi._id;
-  const tokenSymbol = poi.code;
+/**
+ * tokenize
+ * @param poi The Proof of Identity object to be tokenized.
+ * @returns A token result from the Hedera API.
+ */
+export async function tokenize(name: string, hash: string) {
+  const createTokenTx = await new TokenCreateTransaction()
+    .setTokenName(name)
+    .setTokenSymbol(hash)
+    .setDecimals(0)
+    .setInitialSupply(0)
+    .setSupplyKey(privateKey)
+    .setTokenType(TokenType.NonFungibleUnique)
+    .setSupplyType(TokenSupplyType.Finite)
+    .setMaxSupply(1000)
+    .setTreasuryAccountId(accountId)
+    .execute(client)
 
-    let createTokenTx = await new TokenCreateTransaction()
-        .setTokenName('JAGABOOKennels')
-        .setTokenSymbol('JAGABOO')
-        .setDecimals(0)
-        .setInitialSupply(0)
-        .setSupplyKey(privateKey)
-        .setTokenType(TokenType.NonFungibleUnique)
-        .setSupplyType(TokenSupplyType.Finite)
-        .setMaxSupply(1000)
-        .setTreasuryAccountId(accountId)
-        .execute(client);
-
-    let createReceipt = await createTokenTx.getReceipt(client);
-    let newTokenId = createReceipt.tokenId;
-    LOGGER.debug({ message: 'Create Receipt for NFT', createReceipt, newTokenId });
-    return createReceipt;
-
-    
+  const createReceipt = await createTokenTx.getReceipt(client)
+  const newTokenId = createReceipt.tokenId
+  LOGGER.debug({
+    message: 'Create Receipt for NFT',
+    status: createReceipt.status,
+    newTokenId,
+  })
+  return createReceipt
 }
-
