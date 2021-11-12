@@ -470,10 +470,7 @@ const debouncedCheckValidationProofs = _.debounce(
             proof: proofStatus,
           })
           updateMessage(poi.code, MESSAGES.TOKENIZING)
-          const token = await tokenize(
-            poi.code,
-            poi.verificationProof.proof.hash
-          )
+          const token = await tokenize(poi.verificationProof.proof.hash)
           await updateToken(code, token)
           await updateStatus(code, POI_STATUS.VERIFIED)
           updateMessage(poi.code, MESSAGES.COMPLETE)
@@ -661,8 +658,11 @@ const debouncedCheckExistingValidationProofs = _.debounce(
           proof: proofStatus,
         })
         updateMessage(poi.code, MESSAGES.TOKENIZING)
-        const token = await tokenize(poi.code, poi.verificationProof.proof.hash)
-        await updateToken(code, token)
+        const token = await tokenize(poi.verificationProof.proof.hash)
+        await updateToken(code, {
+          tokenLink: `https://www.zionft.com/testnet/${token.tokenID}`,
+          ...token,
+        })
         await updateStatus(code, POI_STATUS.VERIFIED)
         updateMessage(poi.code, MESSAGES.COMPLETE)
       }

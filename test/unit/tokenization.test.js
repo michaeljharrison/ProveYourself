@@ -1,3 +1,4 @@
+import { createHash } from 'crypto'
 import { tokenize } from '../../server-middleware/tokenize.ts'
 
 const TIMEOUT = 360000
@@ -7,18 +8,13 @@ afterAll(() => {})
 
 test(`It Can Tokenize some generic JSON data`, async () => {
   // Generic Data
-  const myData = {
-    _id: 1,
-    name: 'John Smith',
-    code: 'abc-123-abc-123',
-    createdOn: Date.now(),
-  }
+  const myData = createHash('sha256').update('abc').digest('hex')
 
   // Tokenize it.
   try {
     const token = await tokenize(myData)
     console.log(token)
-    expect(token.status._code).toEqual(22)
+    expect(token.tokenID).toBeGreaterThan(0)
   } catch (error) {
     console.log(error)
     expect(1).toEqual(0)

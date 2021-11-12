@@ -42,6 +42,9 @@ async function init() {
     SDK_ENDPOINT: process.env.PROVENDB_SDK_ENDPOINT,
     SDK_ANCHOR:
       process.env.PROVENDB_SDK_ANCHOR || anchor.Anchor.Type.HEDERA_MAINNET,
+    TOKEN_NAME: process.env.TOKEN_NAME || 'PoiNFT',
+    TOKEN_SYMBOL: process.env.TOKEN_SYMBOL || 'POIS',
+    HEDERA_ACCOUNT_ID: process.env.HEDERA_ACCOUNT_ID,
   })
   try {
     await client.connect()
