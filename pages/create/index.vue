@@ -1,7 +1,7 @@
 <template>
   <div class="templateWrapper">
     <div class="body">
-      <h1>New Identity Verification</h1>
+      <h1>New Hole</h1>
       <p>{{ constants.COPY.CREATING.DESCRIPTION }}</p>
       <br />
       <a-form :form="form" :layout="formLayout">
@@ -11,7 +11,7 @@
             theme="twoTone"
             :style="{ fontSize: '18px', 'padding-right': '10px' }"
           />
-          <h2>Proof Settings</h2>
+          <h2>Course Information</h2>
           <a-tooltip>
             <template slot="title">
               {{ constants.COPY.CREATING.PROOF_SETTINGS }}</template
@@ -19,36 +19,72 @@
             <a-icon type="question-circle" />
           </a-tooltip>
         </div>
-        <a-form-item label="Target Blockchain">
-          <a-radio-group
-            v-model="blockchain"
-            :default-value="constants.BLOCKCHAINS.HEDERA"
-            @change="handleBlockchainChange"
-          >
-            <a-radio-button :value="constants.BLOCKCHAINS.HEDERA">
-              {{ constants.BLOCKCHAINS.HEDERA }}
-            </a-radio-button>
-            <a-tooltip>
-              <template slot="title"> Coming Soon(ish) </template>
-              <a-radio-button disabled :value="constants.BLOCKCHAINS.ETHEREUM">
-                {{ constants.BLOCKCHAINS.ETHEREUM }}
-              </a-radio-button>
-            </a-tooltip>
-            <a-tooltip>
-              <template slot="title"> Coming Soon(ish) </template>
-              <a-radio-button disabled :value="constants.BLOCKCHAINS.BITCOIN">
-                {{ constants.BLOCKCHAINS.BITCOIN }}
-              </a-radio-button>
-            </a-tooltip>
-          </a-radio-group>
-        </a-form-item>
-        <a-form-item label="Expiry">
-          <a-date-picker
-            :default-value="expiry"
+        <a-form-item label="Course Name">
+          <a-input
+            v-decorator="[
+              'courseName',
+              {
+                rules: [
+                  { required: true, message: 'Please input your course name.' },
+                ],
+              },
+            ]"
             :disabled="loading"
-            :format="dateFormat"
-            :disabled-date="disabledDates"
-            @change="handleExpiryChange"
+            placeholder="Eynesbury Golf Course"
+          />
+        </a-form-item>
+        <a-form-item label="State or Territory">
+          <a-select
+            v-decorator="[
+              'state',
+              {
+                rules: [
+                  {
+                    required: true,
+                    message: 'Please input your course state or territory',
+                  },
+                ],
+              },
+            ]"
+          >
+            <a-select-option value="VIC"> VIC </a-select-option>
+            <a-select-option value="NSW"> NSW </a-select-option>
+            <a-select-option value="QLD"> QLD </a-select-option>
+            <a-select-option value="SA"> SA </a-select-option>
+            <a-select-option value="TAS"> TAS </a-select-option>
+            <a-select-option value="WA"> WA </a-select-option>
+            <a-select-option value="ACT"> ACT </a-select-option>
+            <a-select-option value="NT"> NT </a-select-option>
+          </a-select>
+        </a-form-item>
+        <a-form-item label="Suburb">
+          <a-input
+            v-decorator="[
+              'suburb',
+              {
+                rules: [
+                  { required: true, message: 'Please input your suburb' },
+                ],
+              },
+            ]"
+            :disabled="loading"
+            placeholder="Eynesbury"
+          />
+        </a-form-item>
+        <a-form-item label="Course Par">
+          <a-input-number
+            :min="1"
+            :max="999"
+            v-decorator="[
+              'coursePar',
+              {
+                rules: [
+                  { required: true, message: 'Please input the course par' },
+                ],
+              },
+            ]"
+            :disabled="loading"
+            placeholder="72"
           />
         </a-form-item>
         <div :style="{ 'margin-top': '34px' }" class="sectionHeader">
@@ -57,7 +93,7 @@
             theme="twoTone"
             :style="{ fontSize: '18px', 'padding-right': '10px' }"
           />
-          <h2>Identity Information</h2>
+          <h2>Hole Information</h2>
           <a-tooltip>
             <template slot="title">
               {{ constants.COPY.CREATING.IDENTITY_SETTINGS }}</template
@@ -65,88 +101,49 @@
             <a-icon type="question-circle" />
           </a-tooltip>
         </div>
-        <a-form-item label="First Name">
+        <a-form-item label="Hole Number">
+          <a-input-number
+            :min="1"
+            :max="999"
+            v-decorator="[
+              'holeNumber',
+              {
+                rules: [
+                  { required: true, message: 'Please input the Hole Number' },
+                ],
+              },
+            ]"
+            :disabled="loading"
+            placeholder="1"
+          />
+        </a-form-item>
+        <a-form-item label="Nickname (optional)">
           <a-input
             v-decorator="[
-              'firstName',
+              'nickname',
               {
-                rules: [
-                  { required: true, message: 'Please input your first name' },
-                ],
+                rules: [],
               },
             ]"
             :disabled="loading"
-            placeholder="First"
+            placeholder="The Peacock"
           />
         </a-form-item>
-        <a-form-item label="Last Name">
-          <a-input
+        <a-form-item label="Hole Par">
+          <a-input-number
+            :min="1"
+            :max="999"
             v-decorator="[
-              'lastName',
+              'holePar',
               {
                 rules: [
-                  { required: true, message: 'Please input your last name' },
+                  { required: true, message: 'Please input the hole par' },
                 ],
               },
             ]"
             :disabled="loading"
-            placeholder="Lastman"
+            placeholder="6"
           />
-        </a-form-item>
-        <a-form-item label="Date of Birth">
-          <a-date-picker
-            v-decorator="[
-              'dateOfBirth',
-              {
-                rules: [
-                  {
-                    required: true,
-                    message: 'Please input your date of birth',
-                  },
-                ],
-              },
-            ]"
-            :format="dateFormat"
-            :default-value="dateOfBirth"
-            :disabled-date="disabledDOB"
-            :disabled="loading"
-            @change="handleDOBChange"
-          />
-        </a-form-item>
-        <a-form-item label="Email Address">
-          <a-input
-            v-decorator="[
-              'email',
-              {
-                rules: [
-                  {
-                    type: 'email',
-                    required: true,
-                    message: 'Please input your email address',
-                  },
-                ],
-              },
-            ]"
-            :disabled="loading"
-            placeholder="f.lastman@email.com"
-          />
-        </a-form-item>
-        <a-form-item label="Identity Document">
-          <a-radio-group
-            v-model="idDoc"
-            :default-value="constants.DOCUMENTS.DRIVERS_LICENSE"
-            @change="handleDocumentChange"
-          >
-            <a-radio-button :value="constants.DOCUMENTS.DRIVERS_LICENSE">
-              {{ constants.DOCUMENTS.DRIVERS_LICENSE }}
-            </a-radio-button>
-            <a-tooltip>
-              <template slot="title"> Coming Soon(ish) </template>
-              <a-radio-button disabled :value="constants.DOCUMENTS.PASSPORT">
-                {{ constants.DOCUMENTS.PASSPORT }}
-              </a-radio-button>
-            </a-tooltip>
-          </a-radio-group>
         </a-form-item>
       </a-form>
     </div>
@@ -164,7 +161,6 @@
 </template>
 
 <script lang="ts">
-import moment from 'moment'
 import 'moment/locale/en-au'
 // import { mapState } from 'vuex'
 import constants from '~/store/constants'
@@ -176,14 +172,9 @@ export default {
     return {
       formLayout: 'vertical',
       dateFormat: 'DD/MM/YYYY',
-      blockchain: constants.BLOCKCHAINS.HEDERA,
-      expiry: moment().add(1, 'weeks'),
-      dateOfBirth: moment().subtract(16, 'years'),
-      document: constants.DOCUMENTS.DRIVERS_LICENSE,
       constants,
       // @ts-ignore
       form: this.$form.createForm(this, { name: 'dynamic_rule' }),
-      moment,
       loading: false,
     }
   },
@@ -192,40 +183,24 @@ export default {
     this.$store.commit('SET_stateCreating')
   },
   methods: {
-    handleBlockchainChange(newBlockchain: { target: { value: string } }) {
-      this.blockchain = newBlockchain.target.value
-    },
-    handleDocumentChange(newDoc: { target: { value: string } }) {
-      this.blockchain = newDoc.target.value
-    },
-    handleExpiryChange(newExpiry: any) {
-      this.expiry = newExpiry
-    },
-    handleDOBChange(newDOB: any, newDOBString: any) {
-      console.log(newDOBString)
-      this.dob = newDOB
-    },
     submit(e: Event) {
       e.preventDefault()
       this.form.validateFields(async (err: any, values: any) => {
         if (!err) {
-          const loading = this.$message.loading(`Creating POI Request...`, 0)
+          const loading = this.$message.loading(`Creating New Hole...`, 0)
           this.loading = true
           try {
-            const poi = await this.$store.dispatch('ACTION_createNewPOI', {
+            console.log(values)
+            const hole = await this.$store.dispatch('ACTION_createNewHole', {
               request: {
                 ...values,
-                expiry: this.expiry,
-                blockchain: this.blockchain,
-                dob: this.dateOfBirth,
-                document: this.document,
               },
             })
-            this.$message.success(`POI Created!`)
+            this.$message.success(`Hole Created!`)
             loading()
             this.loading = false
             setTimeout(() => {
-              window.location.href = `upload?code=${poi.code}`
+              window.location.href = `upload?code=${hole.code}`
             }, 0)
           } catch (e) {
             console.error(e)
@@ -238,16 +213,6 @@ export default {
           }
         }
       })
-    },
-    disabledDates(value: any) {
-      const today = new Date()
-      today.setDate(today.getDate() - 1)
-      return value.valueOf() <= today.valueOf()
-    },
-    disabledDOB(value: any) {
-      const today = new Date()
-      today.setDate(today.getDate() - 1)
-      return value.valueOf() >= today.valueOf()
     },
   },
 }

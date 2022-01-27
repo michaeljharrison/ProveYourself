@@ -95,6 +95,7 @@ uploads
 
 # Mlaunch data
 data
+mongoData
 
 #leveldb data
 my-db

@@ -1,5 +1,5 @@
 {
-  "name": "ProveYourself",
+  "name": "nftee-web",
   "version": "1.0.0",
   "private": true,
   "scripts": {
@@ -9,11 +9,15 @@
     "generate": "nuxt generate",
     "lint:js": "eslint --ext \".js,.vue\" --ignore-path .gitignore .",
     "prepare": "husky install",
-    "lint": "yarn lint:js",
+    "lint": "eslint . -c ./.eslintrc.json --fix",
     "test": "jest --detectOpenHandles"
   },
   "lint-staged": {
-    "*.{js,vue}": "eslint"
+    "*.{js,jsx}": [
+      "prettier --parser flow --write --single-quote",
+      "eslint --fix",
+      "git add"
+    ]
   },
   "dependencies": {
     "@azure/cognitiveservices-computervision": "^8.1.0",
@@ -27,11 +31,12 @@
     "colors": "^1.4.0",
     "core-js": "^3.15.1",
     "cors": "^2.8.5",
+    "eslint-config-airbnb": "^19.0.4",
     "express": "^4.17.1",
     "express-winston": "^4.2.0",
     "jszip": "^3.7.1",
-    "less": "^4.1.1",
-    "less-loader": "5.0.0",
+    "less": "3.9.0",
+    "less-loader": "4.1.0",
     "level": "^7.0.0",
     "lodash": "^4.17.21",
     "mongodb": "^4.1.1",
@@ -64,7 +69,10 @@
     "@wdio/sync": "^7.7.4",
     "eslint": "^7.29.0",
     "eslint-config-prettier": "^8.3.0",
+    "eslint-plugin-jsx-a11y": "^6.5.1",
     "eslint-plugin-nuxt": "^2.0.0",
+    "eslint-plugin-prettier": "^4.0.0",
+    "eslint-plugin-react": "^7.28.0",
     "eslint-plugin-vue": "^7.12.1",
     "eslint-plugin-wdio": "^7.4.2",
     "husky": "^6.0.0",

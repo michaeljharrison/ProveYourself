@@ -2,7 +2,7 @@
   <div class="templateWrapper">
     <div class="body verification" :style="{ 'overflow-x': hidden }">
       <div class="header">
-        <h1>Verify</h1>
+        <h1>View</h1>
         <p>{{ constants.COPY.VERIFYING.DESCRIPTION }}</p>
         <br />
       </div>
@@ -11,7 +11,7 @@
       </div>
       <div v-else class="body">
         <a-result
-          v-if="poi && poi.status === 'FAILED'"
+          v-if="hole && hole.status === 'FAILED'"
           status="500"
           title="Not Verified"
           sub-title="This POI has been uploaded but failed verification, try uploading a new image for this POI."
@@ -40,7 +40,7 @@
           </template>
         </a-result>
         <a-result
-          v-else-if="poi && poi.status === 'VERIFIED'"
+          v-else-if="hole && hole.status === 'COMPLETE'"
           status="success"
           title="Verified"
           sub-title="This POI has been uploaded and verified, see details below."
@@ -61,32 +61,16 @@
               class="bottom"
               :style="{ 'padding-left': '20px', 'padding-right': '20px' }"
             >
-              <div class="left">
+              <div class="image">
                 <h2>Uploaded Image</h2>
                 <img
-                  v-if="poi && poi.file && poi.file.binaryData"
+                  v-if="hole && hole.file && hole.file.binaryData"
                   :src="
                     'data:image/png;base64,' +
-                    poi.file.binaryData.toString('base64')
+                    hole.file.binaryData.toString('base64')
                   "
                 />
                 <a-skeleton v-else></a-skeleton>
-              </div>
-              <div class="right">
-                <h2>Proof</h2>
-                <div>
-                  <div class="iframeContainer">
-                    <object
-                      :data="`/api/certificate/${code}`"
-                      type="application/pdf"
-                    >
-                      <embed
-                        :src="`/api/certificate/${code}`"
-                        type="application/pdf"
-                      />
-                    </object>
-                  </div>
-                </div>
               </div>
             </div>
             <div class="about">
@@ -107,71 +91,48 @@
                     <div class="stat">
                       <a-statistic
                         title="Created On"
-                        :value="moment(poi.createdOn).format('DD MMM YYYY')"
-                        style="margin-right: 50px"
-                      />
-                      <a-statistic
-                        title="Verified On"
-                        :value="moment(poi.verifiedOn).format('DD MMM YYYY')"
-                      />
-                    </div>
-                    <div class="stat">
-                      <a-statistic
-                        title="Block Time"
-                        :value="
-                          poi.initialProof.proof.metadata.blockTime.toString()
-                        "
-                        style="margin-right: 50px"
-                      />
-                    </div>
-                    <div class="stat">
-                      <p class="ant-statistic-title">Confidence</p>
-                      <a-progress
-                        status="active"
-                        type="circle"
-                        :stroke-color="{
-                          '0%': '#108ee9',
-                          '100%': '#87d068',
-                        }"
-                        :percent="
-                          Number.parseFloat(
-                            poi.verification.verifiedConfidence * 100
-                          ).toFixed(2)
-                        "
-                      />
-                    </div>
-                    <div class="stat">
-                      <a-statistic
-                        title="Anchored On"
-                        :value="poi.blockchain"
+                        :value="moment(hole.createdOn).format('DD MMM YYYY')"
                         style="margin-right: 50px"
                       />
                     </div>
                     <div class="stat">
                       <a-statistic
-                        title="Found On Line"
-                        :value="poi.verification.lineFound + 1"
+                        title="Course"
+                        :value="hole.courseName"
+                        style="margin-right: 50px"
+                      />
+                      <a-statistic :value="hole.state" />
+                      <a-statistic :value="hole.suburb" />
+                    </div>
+                    <div class="stat">
+                      <a-statistic
+                        title="Hole Number"
+                        :value="hole.holeNumber"
                         style="margin-right: 50px"
                       />
                       <a-statistic
-                        title="Word"
-                        :value="poi.verification.wordFound + 1"
+                        v-if="hole && hole.holeDescription"
+                        :value="hole.holeDescription"
                       />
                     </div>
                     <div class="stat">
                       <a-statistic
-                        title="Name"
-                        :value="poi.name"
+                        title="Course Par"
+                        :value="hole.coursePar"
                         style="margin-right: 50px"
                       />
-                      <a-statistic title="Email" :value="poi.email" />
+                      <a-statistic
+                        title="Hole Par"
+                        :value="hole.holePar"
+                        style="margin-right: 50px"
+                      />
                     </div>
                     <div class="stat">
                       <p class="ant-statistic-title">View NFT</p>
                       <a
                         target="__blank"
-                        :href="poi && poi.token && poi.token.tokenLink"
-                        >{{ poi && poi.token && poi.token.tokenLink }}</a
+                        :href="hole && hole.token && hole.token.tokenLink"
+                        >{{ hole && hole.token && hole.token.tokenLink }}</a
                       >
                     </div>
                   </div>
@@ -180,27 +141,27 @@
                 <a-tab-pane key="3" tab="JSON">
                   <VueJsonPretty
                     :deep="2"
-                    :data="poi"
+                    :data="hole"
                     show-length
                   ></VueJsonPretty
                 ></a-tab-pane>
                 <a-tab-pane key="4" tab="NFT">
-                  <VueJsonPretty :data="poi.token" show-length></VueJsonPretty
+                  <VueJsonPretty :data="hole.token" show-length></VueJsonPretty
                 ></a-tab-pane>
               </a-tabs>
             </div>
           </template>
         </a-result>
         <a-result
-          v-else-if="poi && poi.status === 'UPLOADING' && pollingProof"
+          v-else-if="hole && hole.status === 'UPLOADING' && pollingProof"
           status="success"
           title="Creating Blockchain Proof..."
           sub-title="Your proof of identity is being anchored on the blockchain, this may take a few minutes..."
         >
           <template #icon>
-            <p class="message">{{ poi && poi.message }}</p>
+            <p class="message">{{ hole && hole.message }}</p>
             <a-spin
-              v-if="poi && poi.status === 'UPLOADING' && pollingProof"
+              v-if="hole && hole.status === 'UPLOADING' && pollingProof"
               size="large"
               :tip="`Checking again in ${pollingProof} seconds...`"
             ></a-spin>
@@ -232,7 +193,7 @@
           </template>
         </a-result>
         <a-result
-          v-else-if="poi"
+          v-else-if="hole"
           status="warning"
           title="Awaiting Upload"
           sub-title="Sorry, no POI has been uploaded for that request yet!"
@@ -265,8 +226,8 @@
       </div>
     </div>
     <div class="footer">
-      <a-button v-if="poi && poi.status === 'VERIFIED'"
-        ><NuxtLink target="_blank" :to="`/api/download/${poi.code}`"
+      <a-button v-if="hole && hole.status === 'COMPLETE'"
+        ><NuxtLink target="_blank" :to="`/api/download/${hole.code}`"
           >Download
         </NuxtLink>
       </a-button>
@@ -298,7 +259,7 @@ export default {
       pollingProof: 0,
       constants,
       fileList: [],
-      poi: null,
+      hole: null,
       notFound: false,
       code: null,
       // @ts-ignore
@@ -318,18 +279,19 @@ export default {
     }
     // replace `getPost` with your data fetching util / API wrapper
     try {
-      const poi = await this.$store.dispatch('ACTION_fetchPOI', {
+      const hole = await this.$store.dispatch('ACTION_fetchHole', {
         code: fetchedCode,
       })
-      if (poi) {
-        this.poi = poi
+      if (hole) {
+        console.log(hole)
+        this.hole = hole
         this.code = fetchedCode
-        if (poi.status === 'UPLOADING') {
+        if (hole.status === 'UPLOADING') {
           this.pollingProof = 5
           this.pollProof()
         }
       }
-      this.certContent = `<html><body><object data="https://proveyourself.azurewebsites.net/api/certificate/${poi.code}" type="application/pdf"><embed src="https://proveyourself.azurewebsites.net/api/certificate/${poi.code}" type="application/pdf"/></object></body></html>
+      this.certContent = `<html><body><object data="https://NFTee.azurewebsites.net/api/certificate/${hole.code}" type="application/pdf"><embed src="https://NFTee.azurewebsites.net/api/certificate/${hole.code}" type="application/pdf"/></object></body></html>
 `
     } catch (e) {
       if (fetchedCode) {
@@ -360,13 +322,13 @@ export default {
           fetchedCode = this.currentPOI.code
         }
         try {
-          const poi = await this.$store.dispatch('ACTION_fetchPOI', {
+          const hole = await this.$store.dispatch('ACTION_fetchPOI', {
             code: fetchedCode,
           })
-          if (poi) {
-            this.poi = poi
+          if (hole) {
+            this.hole = hole
             this.code = fetchedCode
-            if (poi.status === 'UPLOADING') {
+            if (hole.status === 'UPLOADING') {
               setTimeout(() => {
                 this.pollProof()
               }, 1000)
@@ -398,7 +360,7 @@ export default {
     },
     cancel(e: Event) {
       e.preventDefault()
-      this.poi = null
+      this.hole = null
       this.loading = false
       this.notFound = false
       this.fileList = []
@@ -597,5 +559,9 @@ img {
 object {
   width: 100%;
   height: 100%;
+}
+
+.image {
+  width: 100%;
 }
 </style>

@@ -8,7 +8,7 @@
         :style="{ lineHeight: '64px' }"
       >
         <a-menu-item key="1">
-          <NuxtLink to="/"><p class="navHome">ProveYourself</p></NuxtLink>
+          <NuxtLink to="/"><p class="navHome">NFTee</p></NuxtLink>
         </a-menu-item>
         <a-menu-item key="2" @click="setCurrentState(constants.STATE.CREATING)">
           <NuxtLink to="/create">CREATE</NuxtLink>
@@ -23,7 +23,7 @@
           key="4"
           @click="setCurrentState(constants.STATE.VERIFYING)"
         >
-          <NuxtLink to="/verify">VERIFY</NuxtLink>
+          <NuxtLink to="/view">VERIFY</NuxtLink>
         </a-menu-item>
       </a-menu>
     </a-layout-header>

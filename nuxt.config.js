@@ -1,7 +1,8 @@
+/* eslint-disable */
 export default {
   // Global page headers: https://go.nuxtjs.dev/config-head
   head: {
-    title: 'ProveYourself',
+    title: 'nftee-web',
     meta: [
       { charset: 'utf-8' },
       { name: 'viewport', content: 'width=device-width, initial-scale=1' },
@@ -12,15 +13,17 @@ export default {
   },
 
   // Global CSS: https://go.nuxtjs.dev/config-css
-  css: ['ant-design-vue/dist/antd.css', '@/assets/style/main.scss'],
+  css: [
+    'ant-design-vue/dist/antd.css',
+    '@/assets/style/main.scss',
+    '@/assets/style/variables.less',
+  ],
 
   // Server Middleware
   serverMiddleware: [{ path: '/api', handler: '~/server-middleware/rest.ts' }],
 
   // Storybook:
-  storybook: {
-
-  },
+  storybook: {},
 
   server: {
     port: 8000, // default: 3000
@@ -48,9 +51,15 @@ export default {
     // https://go.nuxtjs.dev/typescript
     '@nuxt/typescript-build',
 
-    ['@nuxtjs/google-fonts', {  display: 'swap', families: {
-      Inconsolata: true
-    }}]
+    [
+      '@nuxtjs/google-fonts',
+      {
+        display: 'swap',
+        families: {
+          Inconsolata: true,
+        },
+      },
+    ],
   ],
 
   // Modules: https://go.nuxtjs.dev/config-modules

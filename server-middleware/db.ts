@@ -1,10 +1,9 @@
-import { anchor } from 'provendb-sdk-node'
-import { POI, POI_STATUS, Verification } from '../store/types'
+import { HOLE, HOLE_STATUS, Verification } from '../store/types'
 const winston = require('winston')
 const { MongoClient } = require('mongodb')
 // Replace the uri string with your MongoDB deployment's connection string.
-const URI = process.env.PROVE_YOURSELF_DB || 'mongodb://localhost:27017'
-const DB = process.env.PROVE_YOURSELF_DATABASE || 'proveYourself'
+const URI = process.env.NFTEE_DB || 'mongodb://localhost:27017'
+const DB = process.env.NFTEE_DATABASE || 'nftees'
 
 const WINSTON_FORMAT = winston.format.combine(
   winston.format.colorize({ all: true }),
@@ -35,16 +34,6 @@ async function init() {
     message: 'Creating connection to MongoDB...',
     DB,
     URI,
-    LOOP_TIMER: process.env.PROVE_YOURSELF_LOOP_INTERVAL,
-    SDK_INSECURE: process.env.PROVENDB_SDK_INSECURE,
-    SDK_AWAIT: (process.env.PROVENDB_SDK_AWAIT === 'true' && true) || false,
-    SDK_SKIP: process.env.PROVENDB_SDK_SKIP,
-    SDK_ENDPOINT: process.env.PROVENDB_SDK_ENDPOINT,
-    SDK_ANCHOR:
-      process.env.PROVENDB_SDK_ANCHOR || anchor.Anchor.Type.HEDERA_MAINNET,
-    TOKEN_NAME: process.env.TOKEN_NAME || 'PoiNFT',
-    TOKEN_SYMBOL: process.env.TOKEN_SYMBOL || 'POIS',
-    HEDERA_ACCOUNT_ID: process.env.HEDERA_ACCOUNT_ID,
   })
   try {
     await client.connect()
@@ -55,7 +44,7 @@ async function init() {
 }
 init()
 
-export async function create(code: string, request: POI) {
+export async function create(code: string, request: HOLE) {
   // First make sure the record doesn't already exist.
   LOGGER.debug({ message: 'Creating new record', code, request })
   const requests = database.collection('requests')
@@ -78,18 +67,21 @@ export async function updateCreatedStatus(code: string, initialProof: any) {
   const requests = database.collection('requests')
   await requests.updateOne(
     { code },
-    { $set: { status: POI_STATUS.CREATED, initialProof } }
+    { $set: { status: HOLE_STATUS.CREATED, initialProof } }
   )
   return true
 }
 
 export async function updateUploadingStatus(code: string) {
   const requests = database.collection('requests')
-  await requests.updateOne({ code }, { $set: { status: POI_STATUS.UPLOADING } })
+  await requests.updateOne(
+    { code },
+    { $set: { status: HOLE_STATUS.UPLOADING } }
+  )
   return true
 }
 
-export async function updateStatus(code: string, status: POI_STATUS) {
+export async function updateStatus(code: string, status: HOLE_STATUS) {
   const requests = database.collection('requests')
   await requests.updateOne({ code }, { $set: { status } })
   return true
@@ -121,7 +113,9 @@ export async function updateMessage(code: string, message: string) {
 
 export async function getPendingRequestProofs() {
   const requests = database.collection('requests')
-  const pending = await requests.find({ status: POI_STATUS.CREATING }).toArray()
+  const pending = await requests
+    .find({ status: HOLE_STATUS.CREATING })
+    .toArray()
   return pending
 }
 
@@ -129,7 +123,7 @@ export async function getExistingRequestProofs() {
   const requests = database.collection('requests')
   const pending = await requests
     .find({
-      status: POI_STATUS.CREATING,
+      status: HOLE_STATUS.CREATING,
       'initialProof.proof.id': { $exists: true },
     })
     .toArray()
@@ -140,7 +134,7 @@ export async function getExistingValidationProofs() {
   const requests = database.collection('requests')
   const pending = await requests
     .find({
-      status: POI_STATUS.UPLOADING,
+      status: HOLE_STATUS.UPLOADING,
       'verificationProof.proof.id': { $exists: true },
     })
     .toArray()
@@ -150,27 +144,18 @@ export async function getExistingValidationProofs() {
 export async function getPendingValidationProofs() {
   const requests = database.collection('requests')
   const pending = await requests
-    .find({ status: POI_STATUS.UPLOADING })
+    .find({ status: HOLE_STATUS.UPLOADING })
     .toArray()
   return pending
 }
 
-export async function updateVerificationStatus(
-  code: string,
-  verification: Verification,
-  verificationProof: any,
-  file: any,
-  status: POI_STATUS
-) {
+export async function updateFile(code: string, file: any, status: HOLE_STATUS) {
   const requests = database.collection('requests')
   await requests.updateOne(
     { code },
     {
       $set: {
         status,
-        verification,
-        verifiedOn: new Date(),
-        verificationProof,
         file,
       },
     }

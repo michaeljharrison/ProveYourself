@@ -1,5 +1,5 @@
 import { ReadResult } from '@azure/cognitiveservices-computervision/esm/models'
-import { POI_STATUS, Verification } from '../store/types'
+import { HOLE_STATUS, Verification } from '../store/types'
 import { computerVisionFromFile } from './OCR'
 
 export function checkUpload(poi: any, ocrResult: ReadResult): Verification {
@@ -15,7 +15,7 @@ export function checkUpload(poi: any, ocrResult: ReadResult): Verification {
 
   const { lines } = ocrResult
 
-  const verified = POI_STATUS.FAILED
+  const verified = HOLE_STATUS.FAILED
   const verifiedConfidence = 0
   const lineFound = 0
   const wordFound = 0
@@ -33,13 +33,13 @@ export function checkUpload(poi: any, ocrResult: ReadResult): Verification {
   if (lines) {
     // Iterate through each line
     lines.forEach((line, lineNumber) => {
-      if (result && result.verified === POI_STATUS.VERIFIED) {
+      if (result && result.verified === HOLE_STATUS.VERIFIED) {
         return result
       } else {
         const { words } = line
         // Iterate through each word, searching for WITHOUT SUBS
         words.forEach((word, wordNumber) => {
-          if (result && result.verified === POI_STATUS.VERIFIED) {
+          if (result && result.verified === HOLE_STATUS.VERIFIED) {
             return result
           } else {
             result = checkWord(
@@ -56,11 +56,11 @@ export function checkUpload(poi: any, ocrResult: ReadResult): Verification {
             )
             console.log(result)
           }
-          if (result && result.verified !== POI_STATUS.VERIFIED) {
+          if (result && result.verified !== HOLE_STATUS.VERIFIED) {
             // No result yet, but possibly a joining word.
             joiningWords = result.joiningWords
             joinedWord = result.joinedWord
-          } else if (result && result.verified === POI_STATUS.VERIFIED) {
+          } else if (result && result.verified === HOLE_STATUS.VERIFIED) {
             return result
           }
         })
@@ -69,7 +69,7 @@ export function checkUpload(poi: any, ocrResult: ReadResult): Verification {
         joinedWord = ''
         joiningWords = false
         words.forEach((word, wordNumber) => {
-          if (result && result.verified === POI_STATUS.VERIFIED) {
+          if (result && result.verified === HOLE_STATUS.VERIFIED) {
             return result
           }
           result = checkWord(
@@ -85,7 +85,7 @@ export function checkUpload(poi: any, ocrResult: ReadResult): Verification {
             joiningWords
           )
           // console.log(result)
-          if (result && result.verified === POI_STATUS.VERIFIED) {
+          if (result && result.verified === HOLE_STATUS.VERIFIED) {
             return result
           }
 
@@ -108,7 +108,7 @@ export function checkUpload(poi: any, ocrResult: ReadResult): Verification {
                 joiningWords
               )
               // console.log(result)
-              if (result && result.verified === POI_STATUS.VERIFIED) {
+              if (result && result.verified === HOLE_STATUS.VERIFIED) {
                 return result
               }
             }
@@ -128,7 +128,7 @@ export function checkUpload(poi: any, ocrResult: ReadResult): Verification {
                 lineNumber,
                 joiningWords
               )
-              if (result && result.verified === POI_STATUS.VERIFIED) {
+              if (result && result.verified === HOLE_STATUS.VERIFIED) {
                 return result
               }
             }
@@ -137,7 +137,7 @@ export function checkUpload(poi: any, ocrResult: ReadResult): Verification {
       }
     })
   }
-  if (!result || result.verified !== POI_STATUS.VERIFIED) {
+  if (!result || result.verified !== HOLE_STATUS.VERIFIED) {
     return {
       verified,
       verifiedConfidence,
@@ -154,7 +154,7 @@ function checkWord(
   word: { text: string; confidence: number },
   joinedWord: string,
   verificationCode: string,
-  verified: POI_STATUS,
+  verified: HOLE_STATUS,
   verifiedConfidence: number,
   lineFound: number,
   wordFound: number,
@@ -166,7 +166,7 @@ function checkWord(
     `${word.text} === ${verificationCode} (${joinedWord === verificationCode})`
   )
   if (word.text === verificationCode) {
-    verified = POI_STATUS.VERIFIED
+    verified = HOLE_STATUS.VERIFIED
     verifiedConfidence = word.confidence
     lineFound = lineNumber
     wordFound = wordNumber
@@ -196,7 +196,7 @@ function checkWord(
       )
       if (joinedWord === verificationCode) {
         // Entire word has been found!
-        verified = POI_STATUS.VERIFIED
+        verified = HOLE_STATUS.VERIFIED
         verifiedConfidence = word.confidence
         lineFound = lineNumber
         wordFound = wordNumber

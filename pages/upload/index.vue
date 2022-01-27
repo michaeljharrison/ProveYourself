@@ -1,10 +1,10 @@
 <template>
   <div class="templateWrapper">
     <div class="body">
-      <h1>Upload Proof Documents</h1>
+      <h1>Upload Hole Image</h1>
       <p class="description">{{ constants.COPY.UPLOADING.DESCRIPTION }}</p>
       <a-result
-        v-if="!verified || (poi && poi.status === 'FAILED')"
+        v-if="!verified || (hole && hole.status === 'FAILED')"
         status="error"
         title="Verification Failed"
         sub-title="Scroll down to try taking another photo and resubmitting."
@@ -19,22 +19,6 @@
             <a-icon :style="{ color: 'red' }" type="close-circle" /> Poor
             lighting or low quality image.
           </p>
-          <p>
-            <a-icon :style="{ color: 'red' }" type="close-circle" /> All or some
-            of the verification code is obscured.
-          </p>
-          <p>
-            <a-icon :style="{ color: 'red' }" type="close-circle" /> All or some
-            of your face is obscured
-          </p>
-          <p>
-            <a-icon :style="{ color: 'red' }" type="close-circle" /> All or some
-            of your identification document is obscured.
-          </p>
-          <p>
-            <a-icon :style="{ color: 'red' }" type="close-circle" /> Your
-            document details do not match the document in the photo.
-          </p>
         </div>
       </a-result>
       <br />
@@ -42,10 +26,10 @@
         <a-spin size="large" tip="Loading, please wait..."></a-spin>
       </div>
       <a-result
-        v-else-if="poi && poi.status === 'UPLOADING'"
+        v-else-if="hole && hole.status === 'UPLOADING'"
         status="success"
         title="Verifying Upload."
-        sub-title="A proof of identity has already been uploaded for that request."
+        sub-title="A hole photo already been uploaded for that request."
       >
         <template #extra>
           <a-input
@@ -53,14 +37,14 @@
             placeholder="XXXXXXXX-XXXX-XXXX-XXXX-XXXXXXXXXXXXX"
             @change="changeCode"
           />
-          <a-button><a :href="'/verify?code=' + code">Check</a> </a-button>
+          <a-button><a :href="'/view?code=' + code">Check</a> </a-button>
         </template>
       </a-result>
       <a-result
-        v-else-if="poi && poi.status === 'VERIFIED'"
+        v-else-if="hole && hole.status === 'COMPLETE'"
         status="success"
-        title="Already Verified"
-        sub-title="That POI has already been verified!"
+        title="Already Uploaded"
+        sub-title="That hole has already been uploaded!"
       >
         <template #extra>
           <a-input
@@ -68,7 +52,7 @@
             placeholder="XXXXXXXX-XXXX-XXXX-XXXX-XXXXXXXXXXXXX"
             @change="changeCode"
           />
-          <a-button><a :href="'/verify?code=' + code">Check</a> </a-button>
+          <a-button><a :href="'/view?code=' + code">View</a> </a-button>
         </template>
       </a-result>
       <a-result
@@ -89,7 +73,9 @@
         </template>
       </a-result>
       <div
-        v-else-if="poi && (poi.status === 'CREATED' || poi.status === 'FAILED')"
+        v-else-if="
+          hole && (hole.status === 'CREATED' || hole.status === 'FAILED')
+        "
         :style="{ 'margin-bottom': '30px' }"
       >
         <div class="previewSection">
@@ -114,24 +100,24 @@
             <Preview
               :print="false"
               :code="
-                poi.initialProof.proof.metadata.txnId
+                hole.initialProof.proof.metadata.txnId
                   .substring(0, 20)
                   .toUpperCase()
               "
-              :name="poi.name"
+              :name="hole.name"
               :date="moment()"
             />
           </div>
         </div>
       </div>
       <a-result
-        v-else-if="poi && poi.status === 'CREATING'"
+        v-else-if="hole && hole.status === 'CREATING'"
         status="success"
         title="Creating Blockchain Proof..."
         sub-title="Your request is being anchored on the blockchain, this may take a few minutes..."
       >
         <template #icon>
-          <p class="message">{{ poi && poi.message }}</p>
+          <p class="message">{{ hole && hole.message }}</p>
           <a-spin
             size="large"
             :tip="`Checking again in ${pollingProof} seconds...`"
@@ -143,7 +129,7 @@
             placeholder="XXXXXXXX-XXXX-XXXX-XXXX-XXXXXXXXXXXXX"
             @change="changeCode"
           />
-          <a-button><a :href="'/verify?code=' + code">Check</a> </a-button>
+          <a-button><a :href="'/view?code=' + code">Check</a> </a-button>
         </template>
       </a-result>
       <a-result
@@ -166,78 +152,44 @@
         v-if="
           !notFound &&
           !loading &&
-          poi &&
+          hole &&
           !result &&
-          (poi.status === 'CREATED' || poi.status === 'FAILED')
+          (hole.status === 'CREATED' || hole.status === 'FAILED')
         "
         :form="form"
       >
         <a-form-item>
-          <h2>Identity Document Details</h2>
-          <a-form-item label="Licence Number">
-            <a-input
-              v-decorator="[
-                'licenceNumber',
-                {
-                  rules: [
-                    {
-                      required: true,
-                      message: 'Please input your licence number',
-                    },
-                  ],
-                },
-              ]"
-              :disabled="loading"
-              placeholder="NCC1701A"
-              @change="setNumber"
-            />
-          </a-form-item>
-          <a-form-item label="Licence Expiry">
-            <a-input
-              v-decorator="[
-                'licenceExpiry',
-                {
-                  rules: [
-                    {
-                      required: true,
-                      message: 'Please input your licence expiry',
-                    },
-                  ],
-                },
-              ]"
-              :disabled="loading"
-              placeholder="01/01/21"
-              @change="setExpiry"
-            />
-          </a-form-item>
-          <a-form-item label="Licence Address">
-            <a-input
-              v-decorator="[
-                'address',
-                {
-                  rules: [
-                    { required: true, message: 'Please input your address' },
-                  ],
-                },
-              ]"
-              :disabled="loading"
-              placeholder="12 Cloverfield Lane"
-              @change="setAddress"
-            />
-          </a-form-item>
+          <h2>Upload Hole Photo</h2>
+          <a-upload
+            :loading="loading"
+            name="file"
+            :multiple="true"
+            :file-list="fileList"
+            :action="'api/upload/' + code"
+            accept=".jpg,.jpeg,.png"
+            :headers="headers"
+            :show-upload-list="false"
+            :data="{ licenceNumber, licenceExpiry, licenceAddress }"
+            @change="handleChange"
+            @beforeUpload="beforeUpload"
+          >
+            <a-button type="primary" :disabled="loading" :loading="loading">
+              <a-icon type="upload" /> Upload
+            </a-button>
+          </a-upload>
         </a-form-item>
       </a-form>
     </div>
     <div class="footer">
-      <a-button v-if="poi && poi.status === 'VERIFIED'"
+      <a-button v-if="hole && hole.status === 'COMPLETE'"
         ><NuxtLink :to="'/create'">Create New </NuxtLink>
       </a-button>
-      <a-button v-if="poi && poi.status === 'VERIFIED'" type="primary"
-        ><NuxtLink :to="'/verify?code=' + code">View Proof</NuxtLink>
+      <a-button v-if="hole && hole.status === 'COMPLETE'" type="primary"
+        ><NuxtLink :to="'/view?code=' + code">View Proof</NuxtLink>
       </a-button>
       <a-button
         v-if="
-          !loading && !notFound && poi && !result && poi.status !== 'VERIFIED'
+          !loading && !notFound && hole && !result && hole.status !== 'COMPLETE'
         "
         class="cancelButton"
         :disabled="loading"
@@ -247,47 +199,11 @@
       >
         Cancel
       </a-button>
-      <a
-        v-if="!poi || poi.status !== 'VERIFIED'"
-        :href="'/print?code=' + code"
-        target="__none"
-      >
-        <a-button :disabled="loading" :loading="loading">
-          <a-icon type="printer" /> Print Code
-        </a-button>
-      </a>
-      <a-upload
-        :loading="loading"
-        name="file"
-        :multiple="true"
-        :file-list="fileList"
-        :action="'api/upload/' + code"
-        accept=".jpg,.jpeg,.png"
-        :headers="headers"
-        :show-upload-list="false"
-        :data="{ licenceNumber, licenceExpiry, licenceAddress }"
-        @change="handleChange"
-        @beforeUpload="beforeUpload"
-      >
-        <a-button
-          type="primary"
-          :disabled="
-            loading ||
-            licenceNumber === null ||
-            licenceExpiry === null ||
-            licenceAddress === null
-          "
-          :loading="loading"
-        >
-          <a-icon type="upload" /> Upload
-        </a-button>
-      </a-upload>
     </div>
   </div>
 </template>
 
 <script lang="ts">
-import moment from 'moment'
 import 'moment/locale/en-au'
 import { mapState } from 'vuex'
 import Preview from '~/components/Preview.vue'
@@ -307,7 +223,7 @@ export default {
       loading: true,
       loadingMessage: null,
       fileList: [],
-      poi: null,
+      hole: null,
       verified: true,
       notFound: false,
       code: null,
@@ -316,7 +232,6 @@ export default {
       licenceAddress: null,
       // @ts-ignore
       form: this.$form.createForm(this, { name: 'dynamic_rule' }),
-      moment,
       result: null,
     }
   },
@@ -332,14 +247,14 @@ export default {
     }
     // replace `getPost` with your data fetching util / API wrapper
     try {
-      const poi = await this.$store.dispatch('ACTION_fetchPOI', {
+      const hole = await this.$store.dispatch('ACTION_fetchHole', {
         code: fetchedCode,
       })
-      if (poi) {
-        console.log(poi)
-        this.poi = poi
+      if (hole) {
+        console.log(hole)
+        this.hole = hole
         this.code = fetchedCode
-        if (poi.status === 'CREATING') {
+        if (hole.status === 'CREATING') {
           this.pollingProof = 5
           this.pollProof()
         }
@@ -372,13 +287,13 @@ export default {
           fetchedCode = this.currentPOI.code
         }
         try {
-          const poi = await this.$store.dispatch('ACTION_fetchPOI', {
+          const hole = await this.$store.dispatch('ACTION_fetchPOI', {
             code: fetchedCode,
           })
-          if (poi) {
-            this.poi = poi
+          if (hole) {
+            this.hole = hole
             this.code = fetchedCode
-            if (poi.status === 'CREATING') {
+            if (hole.status === 'CREATING') {
               setTimeout(() => {
                 this.pollProof()
               }, 1000)
@@ -403,15 +318,6 @@ export default {
         }, 1000)
       }
     },
-    setNumber(event) {
-      this.licenceNumber = event.target.value
-    },
-    setExpiry(event) {
-      this.licenceExpiry = event.target.value
-    },
-    setAddress(event) {
-      this.licenceAddress = event.target.value
-    },
     beforeUpload() {
       this.form.validateFields((err, values) => {
         if (!err) {
@@ -432,12 +338,15 @@ export default {
 
         this.loadingMessage = this.$message.loading(`Verifying Image...`, 0)
         this.loading = true
+        setTimeout(() => {
+          window.location.href = `view?code=${this.hole.code}`
+        }, 0)
       }
       if (info.file.status === 'done') {
         this.loadingMessage()
         this.$message.info(`${info.file.name} verified!`)
         setTimeout(() => {
-          window.location.href = `verify?code=${this.poi.code}`
+          window.location.href = `view?code=${this.hole.code}`
         }, 0)
       } else if (info.file.status === 'error') {
         this.loadingMessage()
@@ -445,7 +354,7 @@ export default {
         this.verified = false
         this.$message.error(`Verification failed, please try again.`)
         setTimeout(() => {
-          //  window.location.href = `verify?code=${this.poi.code}`
+          //  window.location.href = `view?code=${this.hole.code}`
         }, 0)
       }
       this.fileList = [info.file]
@@ -456,7 +365,7 @@ export default {
     },
     cancel(e: Event) {
       e.preventDefault()
-      this.poi = null
+      this.hole = null
       this.loading = false
       this.notFound = false
       this.fileList = []

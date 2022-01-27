@@ -26,15 +26,13 @@ export default {
     },
     CREATING: {
       DESCRIPTION:
-        'Create a new Proof of Identity request using a persons identification details. This will create a unique code that, along with some ID documents and a photo, can be used to prove a persons identity. The Proof of Identity request will be anchored on the blockchain to ensure no tampering can occur.',
-      PROOF_SETTINGS:
-        'These settings will determine how your Blockchain proof is configured.',
-      IDENTITY_SETTINGS:
-        'Input information for the person whos identity you wish to prove.',
+        'Create a new hole for the nfTee charity auction, after adding some information about the hole, you will upload a unique photo to create the NFT.',
+      HOLE_INFO:
+        'Important information about which series your hole exists in.',
+      HOLE_DETAILS: 'Information about the hole itself.',
     },
     UPLOADING: {
-      DESCRIPTION:
-        'Upload a photo of yourself holding a piece of paper with the information below printed. Ensure your face is visible and the lighting is clear. Dont worry, if the photo quality is not sufficient, you are allowed multiple tries.',
+      DESCRIPTION: 'Upload a photo of the hole, as high res as possible.',
     },
     VERIFYING: {
       DESCRIPTION:

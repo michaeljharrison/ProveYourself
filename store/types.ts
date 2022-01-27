@@ -4,12 +4,13 @@ export enum Blockchain {
   ETHEREUM,
 }
 
-export enum POI_STATUS {
+export enum HOLE_STATUS {
   CREATING = 'CREATING',
   CREATED = 'CREATED',
   UPLOADING = 'UPLOADING',
   FAILED = 'FAILED',
   VERIFIED = 'VERIFIED',
+  COMPLETE = 'COMPLETE',
 }
 
 export enum MESSAGES {
@@ -20,7 +21,7 @@ export enum MESSAGES {
   VERIFYING = 'Verifying Proof documents...',
   TOKENIZING = 'Creating NFT...',
   FINAL_ANCHORING = 'Anchoring Proof...',
-  COMPLETE = 'Completed Proof of Identity.',
+  COMPLETE = 'Completed Upload.',
 }
 
 export enum PROOF_STATUS {
@@ -29,7 +30,7 @@ export enum PROOF_STATUS {
 }
 
 export interface Verification {
-  verified: POI_STATUS
+  verified: HOLE_STATUS
   verifiedConfidence: number
   wordFound: number
   lineFound: number
@@ -52,11 +53,25 @@ export interface POI {
   email: string
   blockchain: Blockchain
   expiry: any
-  status: POI_STATUS
+  status: HOLE_STATUS
   verification: Verification
   createdOn: Date
   verifiedOn: Date
   initialProof: any
   verificationProof: any
   file: File
+}
+
+export interface HOLE {
+  _id: string
+  code: string
+  file: any
+  courseName: string
+  state: string
+  suburb: string
+  coursePar: number
+  holeNumber: number
+  status: HOLE_STATUS
+  nickname: string
+  holePar: number
 }
