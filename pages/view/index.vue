@@ -14,7 +14,7 @@
           v-if="hole && hole.status === 'FAILED'"
           status="500"
           title="Not Verified"
-          sub-title="This POI has been uploaded but failed verification, try uploading a new image for this POI."
+          sub-title="This hole has been uploaded but failed to be added to the database, try uploading a new image for this hole."
         >
           <template #extra>
             <a-input
@@ -42,8 +42,8 @@
         <a-result
           v-else-if="hole && hole.status === 'COMPLETE'"
           status="success"
-          title="Verified"
-          sub-title="This POI has been uploaded and verified, see details below."
+          title="Hole Created"
+          sub-title="This Hole has been uploaded along with it's metadata, see details below."
         >
           <template #extra class="extra">
             <div class="top">
@@ -155,8 +155,8 @@
         <a-result
           v-else-if="hole && hole.status === 'UPLOADING' && pollingProof"
           status="success"
-          title="Creating Blockchain Proof..."
-          sub-title="Your proof of identity is being anchored on the blockchain, this may take a few minutes..."
+          title="Uploading Hole...."
+          sub-title="Your hole is being added to the database, this may take a few minutes..."
         >
           <template #icon>
             <p class="message">{{ hole && hole.message }}</p>
@@ -196,7 +196,7 @@
           v-else-if="hole"
           status="warning"
           title="Awaiting Upload"
-          sub-title="Sorry, no POI has been uploaded for that request yet!"
+          sub-title="Sorry, no Hole has been uploaded for that request yet!"
         >
           <template #extra>
             <a-input
@@ -212,7 +212,7 @@
         <a-result
           v-else
           title="Please Enter a Request Code"
-          sub-title="Please enter the request code for your Identity Proof, alternatively, follow the hyperlink provided to you."
+          sub-title="Please enter the request code for your Hole, alternatively, follow the hyperlink provided to you."
         >
           <template #extra>
             <a-input
@@ -226,13 +226,8 @@
       </div>
     </div>
     <div class="footer">
-      <a-button v-if="hole && hole.status === 'COMPLETE'"
-        ><NuxtLink target="_blank" :to="`/api/download/${hole.code}`"
-          >Download
-        </NuxtLink>
-      </a-button>
       <a-button type="primary"
-        ><NuxtLink :to="'/create'">New POI </NuxtLink>
+        ><NuxtLink :to="'/create'">New Hole </NuxtLink>
       </a-button>
     </div>
   </div>
@@ -274,8 +269,8 @@ export default {
     this.error = this.post = null
     vm.loading = true
     let fetchedCode = this.$route.query.code
-    if ((!fetchedCode || fetchedCode.length <= 0) && this.currentPOI) {
-      fetchedCode = this.currentPOI.code
+    if ((!fetchedCode || fetchedCode.length <= 0) && this.currentHole) {
+      fetchedCode = this.currentHole.code
     }
     // replace `getPost` with your data fetching util / API wrapper
     try {
@@ -306,7 +301,7 @@ export default {
   },
   fetchOnServer: false,
   fetchKey: 'upload',
-  computed: mapState(['currentPOI']),
+  computed: mapState(['currentHole']),
   created() {
     this.$fetch()
   },
@@ -318,11 +313,11 @@ export default {
       if (this.pollingProof <= 0) {
         this.pollingProof = 5
         let fetchedCode = this.$route.query.code
-        if ((!fetchedCode || fetchedCode.length <= 0) && this.currentPOI) {
-          fetchedCode = this.currentPOI.code
+        if ((!fetchedCode || fetchedCode.length <= 0) && this.currentHole) {
+          fetchedCode = this.currentHole.code
         }
         try {
-          const hole = await this.$store.dispatch('ACTION_fetchPOI', {
+          const hole = await this.$store.dispatch('ACTION_fetchHole', {
             code: fetchedCode,
           })
           if (hole) {

@@ -11,34 +11,48 @@
           <NuxtLink to="/"><p class="navHome">NFTee</p></NuxtLink>
         </a-menu-item>
         <a-menu-item key="2" @click="setCurrentState(constants.STATE.CREATING)">
-          <NuxtLink to="/create">CREATE</NuxtLink>
+          <NuxtLink to="/create">CREATE HOLE</NuxtLink>
         </a-menu-item>
         <a-menu-item
           key="3"
           @click="setCurrentState(constants.STATE.UPLOADING)"
         >
-          <NuxtLink to="/upload">UPLOAD</NuxtLink>
+          <NuxtLink to="/upload">UPLOAD PHOTO</NuxtLink>
         </a-menu-item>
         <a-menu-item
           key="4"
           @click="setCurrentState(constants.STATE.VERIFYING)"
         >
-          <NuxtLink to="/view">VIEW</NuxtLink>
+          <NuxtLink to="/view">VIEW HOLE</NuxtLink>
         </a-menu-item>
+        <a-sub-menu>
+          <span slot="title" class="submenu-title-wrapper"
+            ><a-icon type="setting" />My Account</span
+          >
+          <a-menu-item key="setting:1"
+            ><nuxt-link class="navbar-item" to="/profile"
+              >Profile</nuxt-link
+            ></a-menu-item
+          >
+          <a-menu-item key="setting:1"
+            ><nuxt-link class="navbar-item" to="/register"
+              >Logout</nuxt-link
+            ></a-menu-item
+          >
+        </a-sub-menu>
+        <a-menu-item key="setting:3">
+          <nuxt-link class="navbar-item" to="/register"
+            >Register</nuxt-link
+          ></a-menu-item
+        >
+        <a-menu-item key="setting:4"
+          ><nuxt-link class="navbar-item" to="/login"
+            >Log In</nuxt-link
+          ></a-menu-item
+        >
       </a-menu>
     </a-layout-header>
     <a-layout-content>
-      <div class="stepWrapper">
-        <a-steps :current="stateToInt()" size="small">
-          <a-step title="Create"> <a-icon slot="icon" type="setting" /></a-step>
-          <a-step title="Upload Proof">
-            <a-icon slot="icon" type="user"
-          /></a-step>
-          <a-step title="Verify">
-            <a-icon slot="icon" type="check-square"
-          /></a-step>
-        </a-steps>
-      </div>
       <div class="content">
         <Nuxt />
       </div>
@@ -51,7 +65,7 @@ import { mapState } from 'vuex'
 import 'moment/locale/en-au'
 import constants from '~/store/constants'
 export default {
-  name: 'DefaultLayout',
+  name: 'HomeLayout',
   layout: 'default',
   transition: 'page',
   computed: mapState(['currentState']),
@@ -92,7 +106,7 @@ export default {
 }
 </script>
 
-<style lang="scss">
+<style lang="scss" scoped>
 /*
 * Prefixed by https://autoprefixer.github.io
 * PostCSS: v8.3.6,
@@ -176,7 +190,7 @@ html {
 
 .ant-steps {
   max-width: 1024px;
-  height: 28px;
+  height: 28px !important;
 }
 
 .content {
@@ -194,11 +208,10 @@ html {
   -ms-flex-align: center;
   align-items: center;
   width: 100%;
-  padding-left: 40px;
-  padding-right: 40px;
+  padding-left: 0px;
+  padding-right: 0px;
 
-  .header,
-  .fullPage {
+  .header {
     margin-left: auto;
     margin-right: auto;
     display: -webkit-box;
@@ -215,12 +228,41 @@ html {
     -ms-flex-align: center;
     align-items: center;
     max-width: 1024px;
+    .ant-result {
+      padding: 0px !important;
+      width: 80%;
+      max-width: 1024px;
+      .ant-steps-item-container {
+        display: -webkit-box;
+        display: -ms-flexbox;
+        display: flex;
+
+        .ant-steps {
+          height: 24px;
+        }
+      }
+    }
   }
   .body {
+    margin-left: auto;
+    margin-right: auto;
+    .ant-result {
+      padding-top: 0px;
+      padding-bottom: 0px;
+      padding: 0px !important;
+    }
     .ant-result-icon {
       max-width: 1024px;
       margin-left: auto;
       margin-right: auto;
+      display: -webkit-box;
+      display: -ms-flexbox;
+      display: flex;
+      padding-top: 0 !important;
+      p {
+        margin-left: 10px;
+        margin-right: 10px;
+      }
     }
     .ant-result-title {
       max-width: 1024px;

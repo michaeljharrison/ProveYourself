@@ -72,7 +72,21 @@ export default {
     '@nuxt/content',
     // https://www.npmjs.com/package/nuxt-winston-log
     'nuxt-winston-log',
+    // https://auth.nuxtjs.org
+    '@nuxtjs/auth-next',
   ],
+
+  auth: {
+    strategies: {
+      local: {
+        endpoints: {
+          login: { url: 'login', method: 'post', propertyName: 'data.token' },
+          user: { url: 'me', method: 'get', propertyName: 'data' },
+          logout: false,
+        },
+      },
+    },
+  },
 
   // Axios module configuration: https://go.nuxtjs.dev/config-axios
   axios: {
@@ -101,6 +115,10 @@ export default {
 
   // Content module configuration: https://go.nuxtjs.dev/config-content
   content: {},
+
+  router: {
+    middleware: [],
+  },
 
   // Build Configuration: https://go.nuxtjs.dev/config-build
   build: {

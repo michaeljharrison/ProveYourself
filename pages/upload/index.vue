@@ -77,44 +77,12 @@
           hole && (hole.status === 'CREATED' || hole.status === 'FAILED')
         "
         :style="{ 'margin-bottom': '30px' }"
-      >
-        <div class="previewSection">
-          <div class="left">
-            <h2>Example</h2>
-            <p>
-              <i>
-                Please make sure each individual element is visible; your face,
-                your ID and the code on the paper.
-              </i>
-            </p>
-            <img src="~/assets/images/example.png" />
-          </div>
-          <div class="right">
-            <h2>To Print</h2>
-            <p>
-              <i>
-                If you don't have access to a printer you can write this by
-                hand, in block letters.
-              </i>
-            </p>
-            <Preview
-              :print="false"
-              :code="
-                hole.initialProof.proof.metadata.txnId
-                  .substring(0, 20)
-                  .toUpperCase()
-              "
-              :name="hole.name"
-              :date="moment()"
-            />
-          </div>
-        </div>
-      </div>
+      ></div>
       <a-result
         v-else-if="hole && hole.status === 'CREATING'"
         status="success"
-        title="Creating Blockchain Proof..."
-        sub-title="Your request is being anchored on the blockchain, this may take a few minutes..."
+        title="Creating Hole..."
+        sub-title="Your hole is being added to the database."
       >
         <template #icon>
           <p class="message">{{ hole && hole.message }}</p>
@@ -152,8 +120,8 @@
         v-if="
           !notFound &&
           !loading &&
-          hole &&
           !result &&
+          hole &&
           (hole.status === 'CREATED' || hole.status === 'FAILED')
         "
         :form="form"
@@ -242,8 +210,8 @@ export default {
     vm.loading = true
 
     let fetchedCode = this.$route.query.code
-    if ((!fetchedCode || fetchedCode.length <= 0) && this.currentPOI) {
-      fetchedCode = this.currentPOI.code
+    if ((!fetchedCode || fetchedCode.length <= 0) && this.curentHole) {
+      fetchedCode = this.curentHole.code
     }
     // replace `getPost` with your data fetching util / API wrapper
     try {
@@ -269,7 +237,7 @@ export default {
       this.loading = false
     }
   },
-  computed: mapState(['currentPOI']),
+  computed: mapState(['curentHole']),
   mounted() {
     this.$store.commit('SET_stateUploading')
   },
@@ -283,8 +251,8 @@ export default {
       if (this.pollingProof <= 0) {
         this.pollingProof = 5
         let fetchedCode = this.$route.query.code
-        if ((!fetchedCode || fetchedCode.length <= 0) && this.currentPOI) {
-          fetchedCode = this.currentPOI.code
+        if ((!fetchedCode || fetchedCode.length <= 0) && this.curentHole) {
+          fetchedCode = this.curentHole.code
         }
         try {
           const hole = await this.$store.dispatch('ACTION_fetchPOI', {

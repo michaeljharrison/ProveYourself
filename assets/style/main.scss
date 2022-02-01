@@ -5,6 +5,39 @@
 * Browsers: last 4 version
 */
 
+.fullPage {
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  align-items: center;
+  color: black;
+  min-width: 100vw;
+  min-height: 100vh;
+  padding-top: 40px;
+  padding-bottom: 40px;
+  margin-bottom: 40px;
+  // background: rgb(86, 123, 249);
+  background: white;
+  h1,
+  h2 {
+    color: black;
+  }
+  h2 {
+    margin-bottom: 30px;
+  }
+  button {
+    margin-top: 30px;
+  }
+  .ant-result-icon {
+    display: flex;
+    flex-direction: row;
+    justify-content: center;
+    p {
+      font-size: 54px;
+    }
+  }
+}
+
 .templateWrapper {
   display: flex;
 flex-direction: column;

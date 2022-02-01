@@ -73,6 +73,9 @@ const LOGGER = winston.createLogger({
 
 // Setup.
 const app = express()
+const corsOptions = {
+  origin: 'http://localhost:8081',
+}
 app.use(cors())
 app.use(
   expressWinston.logger({
@@ -83,11 +86,16 @@ app.use(
     colorize: true, // Color the text and status code, using the Express/morgan color palette (text: gray, status: default green, 3XX cyan, 4XX yellow, 5XX red).
   })
 )
-app.use(bodyParser.urlencoded({ extended: false }))
+app.use(bodyParser.urlencoded({ extended: true }))
 app.use(bodyParser.json())
 
 // Routes.
 app.use(express.json())
+
+// Auth Routes
+require('./auth/auth_routes')(app)
+// User authorised routes.
+require('./user.routes')(app)
 
 app.get('/health', (_req: any, res: any) => {
   res.status(200).send(true)
@@ -121,14 +129,15 @@ app.post('/get', async (req: any, res: any) => {
   const code = req.body
   // Save the request to the database.
   const getRes: POI = await get(code.code)
-  LOGGER.debug({
-    message: 'Result of find operation',
-    code: code.code,
-    status: getRes.status,
-    email: getRes.email,
-  })
+
   if (getRes) {
     res.json({ ok: 1, ...getRes })
+    LOGGER.debug({
+      message: 'Result of find operation',
+      code: code.code,
+      status: getRes.status,
+      email: getRes.email,
+    })
   } else {
     res
       .status(404)

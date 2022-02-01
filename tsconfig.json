@@ -28,7 +28,8 @@
       "@nuxtjs/axios",
       "@nuxt/content",
       "@nuxtjs/antd",
-      "@types/node"
+      "@types/node",
+      "@nuxtjs/auth-next"
     ]
   },
   "files": [

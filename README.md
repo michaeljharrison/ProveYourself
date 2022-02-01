@@ -6,7 +6,7 @@ The Demo uses three main components:
 
 1. **MongoDB**: Request and information persistence.
 
-Each POI request follows the flow below, and is always in one of the following states:
+Each Hole NFT request follows the flow below, and is always in one of the following states:
 
 1. **CREATING**: User has provided some basic info (name, email etc...) but the request has not yet asked for a photo.
 2. **CREATED**: Request has been created but no image for the NFT has been uploaded.
