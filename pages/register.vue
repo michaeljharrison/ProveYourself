@@ -81,10 +81,10 @@ export default {
           username: this.username,
           email: this.email,
           password: this.password,
-          roles: 'user',
+          roles: ['user'],
         })
 
-        await this.$auth.loginWith('/api/auth/signin', {
+        await this.$auth.loginWith('local', {
           data: {
             email: this.email,
             password: this.password,
@@ -93,11 +93,14 @@ export default {
 
         this.$router.push('/')
       } catch (e) {
-        console.error(e)
-        this.error = e.response.data.message
+        console.error(e && e.response && e.response.data)
+
+        this.error = e.toString()
         this.$notification.open({
           message: 'Failed to Register',
-          description: e.response.data.message,
+          description:
+            (e.response && e.response.data && e.response.data.message) ||
+            e.toString(),
           onClick: () => {
             console.log('Notification Clicked.')
           },

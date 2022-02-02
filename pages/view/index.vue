@@ -370,13 +370,6 @@ export default {
 </script>
 
 <style lang="scss" scoped>
-/*
-* Prefixed by https://autoprefixer.github.io
-* PostCSS: v8.3.6,
-* Autoprefixer: v10.3.1
-* Browsers: last 4 version
-*/
-
 .ant-result-extra {
   max-width: 1280px;
   padding-left: 20px;

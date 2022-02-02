@@ -219,13 +219,6 @@ export default {
 </script>
 
 <style lang="scss" scoped>
-/*
-* Prefixed by https://autoprefixer.github.io
-* PostCSS: v8.3.6,
-* Autoprefixer: v10.3.1
-* Browsers: last 4 version
-*/
-
 .sectionHeader {
   display: -webkit-box;
   display: -ms-flexbox;

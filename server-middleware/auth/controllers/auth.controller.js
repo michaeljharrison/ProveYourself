@@ -92,8 +92,9 @@ exports.signup = (req, res) => {
 }
 
 exports.signin = (req, res) => {
+  LOGGER.debug({ message: 'New Signin Request', body: req.body })
   User.findOne({
-    username: req.body.username,
+    email: req.body.email,
   })
     .populate('roles', '-__v')
     .exec((err, user) => {
@@ -128,11 +129,49 @@ exports.signin = (req, res) => {
         authorities.push(`ROLE_${user.roles[i].name.toUpperCase()}`)
       }
       res.status(200).send({
-        id: user._id,
-        username: user.username,
-        email: user.email,
-        roles: authorities,
-        accessToken: token,
+        user: {
+          id: user._id,
+          username: user.username,
+          email: user.email,
+          roles: authorities,
+        },
+        token,
       })
     })
+}
+
+exports.getuser = (req, res) => {
+  LOGGER.debug({
+    message: 'New get user request',
+    body: req.body,
+    token: req.headers['x-access-token'],
+  })
+  const token = req.headers['x-access-token'].replace('Bearer ', '')
+
+  if (!token) {
+    LOGGER.error({
+      message: 'No token provided',
+      token: req.headers['x-access-token'],
+    })
+    return res.status(403).send({ message: 'No token provided!' })
+  }
+
+  jwt.verify(token, config.secret, (err, decoded) => {
+    if (err) {
+      LOGGER.error({ message: 'Error decoding token', err })
+      return res.status(500).send({ message: 'Error decoding token', err })
+    }
+
+    LOGGER.debug({ message: 'Decoded token', decoded })
+    User.findOne({ id: decoded.id }, (err, user) => {
+      if (err) {
+        LOGGER.error({ message: 'Error querying database', err })
+        return res.status(500).send({ message: 'Error querying database', err })
+      }
+      return res.json({
+        status: 'success',
+        user,
+      })
+    })
+  })
 }

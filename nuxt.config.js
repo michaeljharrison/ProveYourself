@@ -79,10 +79,22 @@ export default {
   auth: {
     strategies: {
       local: {
+        token: {
+          property: 'token',
+          global: true,
+          name: 'x-access-token',
+          //required: true,
+          // type: 'Bearer',
+        },
+        user: {
+          property: 'user',
+          // autoFetch: true
+        },
         endpoints: {
-          login: { url: 'login', method: 'post', propertyName: 'data.token' },
-          user: { url: 'me', method: 'get', propertyName: 'data' },
-          logout: false,
+          signup: { url: '/api/auth/signup', method: 'post' },
+          login: { url: '/api/auth/signin', method: 'post' },
+          logout: { url: '/api/auth/logout', method: 'post' },
+          user: { url: '/api/auth/user', method: 'get' },
         },
       },
     },
@@ -117,7 +129,7 @@ export default {
   content: {},
 
   router: {
-    middleware: [],
+    middleware: ['auth'],
   },
 
   // Build Configuration: https://go.nuxtjs.dev/config-build

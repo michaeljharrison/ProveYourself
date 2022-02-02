@@ -25,27 +25,31 @@
         >
           <NuxtLink to="/view">VIEW HOLE</NuxtLink>
         </a-menu-item>
-        <a-sub-menu>
+        <a-menu-item key="username" v-if="isAuthenticated">
+          Welcome, {{ loggedInUser.username }}
+        </a-menu-item>
+        <a-sub-menu v-if="isAuthenticated">
           <span slot="title" class="submenu-title-wrapper"
             ><a-icon type="setting" />My Account</span
           >
+
           <a-menu-item key="setting:1"
             ><nuxt-link class="navbar-item" to="/profile"
               >Profile</nuxt-link
             ></a-menu-item
           >
-          <a-menu-item key="setting:1"
+          <a-menu-item key="setting:2"
             ><nuxt-link class="navbar-item" to="/register"
               >Logout</nuxt-link
             ></a-menu-item
           >
         </a-sub-menu>
-        <a-menu-item key="setting:3">
+        <a-menu-item v-if="!isAuthenticated" key="setting:3">
           <nuxt-link class="navbar-item" to="/register"
             >Register</nuxt-link
           ></a-menu-item
         >
-        <a-menu-item key="setting:4"
+        <a-menu-item v-if="!isAuthenticated" key="setting:4"
           ><nuxt-link class="navbar-item" to="/login"
             >Log In</nuxt-link
           ></a-menu-item
@@ -61,14 +65,17 @@
 </template>
 
 <script lang="ts">
-import { mapState } from 'vuex'
+import { mapState, mapGetters } from 'vuex'
 import 'moment/locale/en-au'
 import constants from '~/store/constants'
 export default {
   name: 'HomeLayout',
   layout: 'default',
   transition: 'page',
-  computed: mapState(['currentState']),
+  computed: {
+    ...mapState(['currentState']),
+    ...mapGetters(['isAuthenticated', 'loggedInUser']),
+  },
   data() {
     return {
       constants,
@@ -107,13 +114,6 @@ export default {
 </script>
 
 <style lang="scss" scoped>
-/*
-* Prefixed by https://autoprefixer.github.io
-* PostCSS: v8.3.6,
-* Autoprefixer: v10.3.1
-* Browsers: last 4 version
-*/
-
 html {
   font-family: 'Source Sans Pro', -apple-system, BlinkMacSystemFont, 'Segoe UI',
     Roboto, 'Helvetica Neue', Arial, sans-serif;
