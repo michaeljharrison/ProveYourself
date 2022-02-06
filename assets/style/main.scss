@@ -3,9 +3,9 @@
   display: flex;
   flex-direction: column;
   justify-content: center;
-  align-items: center;
+  align-items: flex-start;
   color: black;
-  min-width: 100vw;
+    max-width: 1280px;
   min-height: 100vh;
   padding-top: 40px;
   padding-bottom: 40px;
@@ -59,8 +59,16 @@ width: 100%;
 h1 {
   margin-top: 20px;
   text-align: center;
-  font-size: 42px;
+  font-size: 62px;
 }
+
+hr {
+border-top: 1px solid black;
+opacity: 0.75;
+width:100%;
+}
+
+
 
 .ant-spin {
   padding-top: 6px;
@@ -72,6 +80,7 @@ h1 {
 }
 
 .ant-layout-content {
+  background-color: white;
   margin-top: 0px !important;
 }
 
@@ -80,7 +89,9 @@ img {
 }
 
 
-.content {}
+.content {
+  max-width: 1280px;
+}
 
 
 .body {
@@ -168,4 +179,47 @@ img {
 .message {
   font-weight: bold;
   color: #1890ff;
+}
+
+
+
+// HOME AND DASHBOARD
+.courseInfo {
+  display: flex;
+  flex-direction: column;
+  justify-content: flex-start;
+  align-items: flex-start;
+  width: 100%;
+  .row {
+    width: 100%;
+    flex-grow: 1;
+    display: flex;
+    flex-direction: row;
+    justify-content: space-between;
+    .label {
+      font-weight: bolder;
+    }
+  }
+}
+
+h1 {
+  margin-bottom: 0px;
+}
+i {
+  opacity: 0.65;
+}
+.actions {
+  padding-bottom: 20px;
+  margin-bottom: 20px;
+  border-bottom: 1px solid rgba(0, 0, 0, 0.375);
+  display: flex;
+  flex-direction: row;
+  width: 100%;
+  justify-content: space-around;
+
+  button {
+    flex-grow: 1;
+    margin-left: 10px;
+    margin-right: 10px;
+  }
 }

@@ -64,9 +64,29 @@ export const actions = {
     commit('SET_stateUploading', createResponse)
     return createResponse
   },
+  async ACTION_updateCourseInformation(
+    { commit, state }: any,
+    options: { request: any }
+  ) {
+    const { request } = options
+    // console.log(request);
+    const createResponse = await this.$axios.$post(
+      '/api/auth/updateCourse',
+      request
+    )
+    commit('SET_stateUploading', createResponse)
+    return createResponse
+  },
   async ACTION_fetchHole({ commit, state }: any, options: { code: string }) {
     const { code } = options
     const fetchResponse = await this.$axios.$post('/api/get', { code })
+    commit('SET_request', fetchResponse)
+    state.currentPOI = fetchResponse
+    // commit('SET_stateUploading', fetchResponse)
+    return fetchResponse
+  },
+  async ACTION_fetchAllHoles({ commit, state }: any, options: {}) {
+    const fetchResponse = await this.$axios.$get('/api/getHoles', {})
     commit('SET_request', fetchResponse)
     state.currentPOI = fetchResponse
     // commit('SET_stateUploading', fetchResponse)

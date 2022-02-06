@@ -77,5 +77,7 @@ module.exports = function (app) {
 
   app.post('/auth/signin', controller.signin)
 
+  app.post('/auth/updateCourse', controller.update)
+
   app.get('/auth/user', controller.getuser)
 }

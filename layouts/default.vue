@@ -7,26 +7,18 @@
         mode="horizontal"
         :style="{ lineHeight: '64px' }"
       >
-        <a-menu-item key="1">
+        <a-menu-item v-if="isAuthenticated" key="1">
+          <NuxtLink to="/dashboard"><p class="navHome">NFTee</p></NuxtLink>
+        </a-menu-item>
+        <a-menu-item v-else key="1">
           <NuxtLink to="/"><p class="navHome">NFTee</p></NuxtLink>
         </a-menu-item>
-        <a-menu-item key="2" @click="setCurrentState(constants.STATE.CREATING)">
-          <NuxtLink to="/create">CREATE HOLE</NuxtLink>
-        </a-menu-item>
         <a-menu-item
-          key="3"
-          @click="setCurrentState(constants.STATE.UPLOADING)"
+          key="2"
+          v-if="isAuthenticated"
+          @click="setCurrentState(constants.STATE.CREATING)"
         >
-          <NuxtLink to="/upload">UPLOAD PHOTO</NuxtLink>
-        </a-menu-item>
-        <a-menu-item
-          key="4"
-          @click="setCurrentState(constants.STATE.VERIFYING)"
-        >
-          <NuxtLink to="/view">VIEW HOLE</NuxtLink>
-        </a-menu-item>
-        <a-menu-item key="username" v-if="isAuthenticated">
-          Welcome, {{ loggedInUser.username }}
+          <NuxtLink to="/create">Add Hole</NuxtLink>
         </a-menu-item>
         <a-sub-menu v-if="isAuthenticated">
           <span slot="title" class="submenu-title-wrapper"
@@ -39,8 +31,8 @@
             ></a-menu-item
           >
           <a-menu-item key="setting:2"
-            ><nuxt-link class="navbar-item" to="/register"
-              >Logout</nuxt-link
+            ><span class="navbar-item" @click="logout"
+              >Logout</span
             ></a-menu-item
           >
         </a-sub-menu>
@@ -82,6 +74,17 @@ export default {
     }
   },
   methods: {
+    async logout() {
+      document.cookie =
+        'auth._token_expiration.local=; Path=/; Expires=Thu, 01 Jan 1970 00:00:01 GMT;'
+      document.cookie =
+        'auth._token.local=; Path=/; Expires=Thu, 01 Jan 1970 00:00:01 GMT;'
+      localStorage.removeItem('auth._token.local')
+      sessionStorage.removeItem('auth._token.local')
+      localStorage.removeItem('auth._token_expiration.local')
+      sessionStorage.removeItem('auth._token_expiration.local')
+      this.$router.push('/login')
+    },
     setCurrentState(newState: any) {
       switch (newState) {
         case constants.STATE.CREATING:

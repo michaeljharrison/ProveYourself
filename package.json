@@ -48,6 +48,7 @@
     "nuxt": "^2.15.7",
     "nuxt-winston-log": "^1.2.0",
     "object-sizeof": "^1.6.1",
+    "postcss-nested": "^5.0.6",
     "provendb-sdk-node": "^0.1.0-alpha.3",
     "request": "^2.88.2",
     "sass": "^1.38.1",

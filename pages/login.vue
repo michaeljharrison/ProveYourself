@@ -51,7 +51,7 @@
 <script>
 export default {
   components: {},
-
+  auth: false,
   data() {
     return {
       email: '',
@@ -70,7 +70,7 @@ export default {
           },
         })
 
-        this.$router.push('/')
+        this.$router.push('/dashboard')
       } catch (e) {
         console.error(e)
         this.$notification.open({

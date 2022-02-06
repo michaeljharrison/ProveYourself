@@ -162,7 +162,7 @@
 
 <script lang="ts">
 import 'moment/locale/en-au'
-// import { mapState } from 'vuex'
+import { mapGetters } from 'vuex'
 import constants from '~/store/constants'
 export default {
   name: 'CreatePage',
@@ -178,7 +178,7 @@ export default {
       loading: false,
     }
   },
-  computed: {},
+  computed: { ...mapGetters(['loggedInUser']) },
   mounted() {
     this.$store.commit('SET_stateCreating')
   },

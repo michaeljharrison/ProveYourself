@@ -168,3 +168,9 @@ export async function get(code: string) {
   const request = await requests.findOne({ code })
   return request
 }
+
+export async function getAll(userId: string) {
+  const requests = database.collection('requests')
+  const request = await requests.find({ userId }).toArray()
+  return request
+}

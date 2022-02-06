@@ -175,3 +175,56 @@ exports.getuser = (req, res) => {
     })
   })
 }
+
+exports.update = (req, res) => {
+  LOGGER.debug({
+    message: 'New update user request',
+    body: req.body,
+    token: req.headers['x-access-token'],
+  })
+  const token = req.headers['x-access-token'].replace('Bearer ', '')
+
+  if (!token) {
+    LOGGER.error({
+      message: 'No token provided',
+      token: req.headers['x-access-token'],
+    })
+    return res.status(403).send({ message: 'No token provided!' })
+  }
+
+  jwt.verify(token, config.secret, (err, decoded) => {
+    if (err) {
+      LOGGER.error({ message: 'Error decoding token', err })
+      return res.status(500).send({ message: 'Error decoding token', err })
+    }
+
+    LOGGER.debug({ message: 'Decoded token', decoded })
+    User.findOne({ id: decoded.id }, (err, user) => {
+      if (err) {
+        LOGGER.error({ message: 'Error querying database', err })
+        return res.status(500).send({ message: 'Error querying database', err })
+      }
+
+      // Signed in, update information.
+      LOGGER.debug({ message: 'Updating User', user })
+      User.updateOne(
+        { id: decoded.id },
+        { $set: { ...req.body } },
+        (err, user) => {
+          if (err) {
+            LOGGER.error({ message: 'Error updating database', err })
+            return res
+              .status(500)
+              .send({ message: 'Error updating database', err })
+          }
+          LOGGER.debug({ message: 'Database updated', user })
+
+          return res.json({
+            status: 'success',
+            user,
+          })
+        }
+      )
+    })
+  })
+}

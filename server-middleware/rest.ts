@@ -19,6 +19,7 @@ import { computerVisionFromFile } from './OCR'
 import {
   create,
   get,
+  getAll,
   getExistingRequestProofs,
   getExistingValidationProofs,
   getPendingRequestProofs,
@@ -41,9 +42,12 @@ const expressWinston = require('express-winston')
 const winston = require('winston')
 const bodyParser = require('body-parser')
 const express = require('express')
+const jwt = require('jsonwebtoken')
+const config = require('./auth/auth.config')
 const multer = require('multer')
 const upload = multer({ dest: 'uploads/' })
 const cors = require('cors')
+const db = require('./auth/models')
 const sizeof = require('object-sizeof')
 const MemoryStream = require('./MemoryStream')
 const unlinkAsync = promisify(fs.unlink)
@@ -70,6 +74,9 @@ const LOGGER = winston.createLogger({
     }),
   ],
 })
+
+const User = db.user
+const Role = db.role
 
 // Setup.
 const app = express()
@@ -102,27 +109,91 @@ app.get('/health', (_req: any, res: any) => {
 })
 
 app.post('/create', async (req: any, res: any) => {
-  const hole = req.body
-  // Generate a unique code based on the blockchain:
-  const code = uuidv4()
-  hole.code = code
-  hole.status = HOLE_STATUS.CREATED
-  hole.createdOn = new Date()
-  hole.message = MESSAGES.CREATED
+  LOGGER.debug({
+    message: 'New create hole request',
+    body: req.body,
+    token: req.headers['x-access-token'],
+  })
+  // First Get User
+  const token = req.headers['x-access-token'].replace('Bearer ', '')
 
-  // Create initial database record.
-  const createRes = await create(code, hole)
-  if (createRes) {
-    res.json({ ok: 1, ...hole })
-  } else {
-    res.status(400).send({
-      ok: 0,
-      error: 'Failed to create record in levelDB.',
-      result: createRes,
+  if (!token) {
+    LOGGER.error({
+      message: 'No token provided',
+      token: req.headers['x-access-token'],
     })
+    return res.status(403).send({ message: 'No token provided!' })
   }
 
-  updateMessage(code, MESSAGES.CREATED)
+  jwt.verify(token, config.secret, async (err, decoded) => {
+    if (err) {
+      LOGGER.error({ message: 'Error decoding token', err })
+      return res.status(500).send({ message: 'Error decoding token', err })
+    }
+    LOGGER.debug({ message: 'Decoded token', decoded })
+
+    const hole = req.body
+    // Generate a unique code based on the blockchain:
+    const code = uuidv4()
+    hole.code = code
+    hole.userId = decoded.id
+    hole.status = HOLE_STATUS.CREATED
+    hole.createdOn = new Date()
+    hole.message = MESSAGES.CREATED
+
+    // Create initial database record.
+    const createRes = await create(code, hole)
+    if (createRes) {
+      res.json({ ok: 1, ...hole })
+    } else {
+      res.status(400).send({
+        ok: 0,
+        error: 'Failed to create record in levelDB.',
+        result: createRes,
+      })
+    }
+
+    updateMessage(code, MESSAGES.CREATED)
+  })
+})
+
+app.get('/getHoles', async (req: any, res: any) => {
+  LOGGER.debug({
+    message: 'New get all holes request',
+    body: req.body,
+    token: req.headers['x-access-token'],
+  })
+  // First Get User
+  const token = req.headers['x-access-token'].replace('Bearer ', '')
+
+  if (!token) {
+    LOGGER.error({
+      message: 'No token provided',
+      token: req.headers['x-access-token'],
+    })
+    return res.status(403).send({ message: 'No token provided!' })
+  }
+
+  jwt.verify(token, config.secret, async (err, decoded) => {
+    if (err) {
+      LOGGER.error({ message: 'Error decoding token', err })
+      return res.status(500).send({ message: 'Error decoding token', err })
+    }
+    LOGGER.debug({ message: 'Decoded token', decoded })
+
+    LOGGER.debug({ message: 'Holes query:', userId: decoded.id })
+    const holes = await getAll(decoded.id)
+    if (holes) {
+      LOGGER.debug({ message: 'Holes fetched', holes })
+      res.json({ ok: 1, holes })
+    } else {
+      res.status(400).send({
+        ok: 0,
+        error: 'Failed to fetch records in database.',
+        result: holes,
+      })
+    }
+  })
 })
 
 app.post('/get', async (req: any, res: any) => {
