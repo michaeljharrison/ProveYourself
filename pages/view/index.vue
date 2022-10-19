@@ -72,83 +72,109 @@
                 />
                 <a-skeleton v-else></a-skeleton>
               </div>
-            </div>
-            <div class="about">
-              <h2>About</h2>
+              <div class="right">
+                <h2>Proof</h2>
+                <a-tabs default-active-key="2" tab-position="top">
+                  <a-tab-pane key="1" tab="Info">
+                    <div class="stats">
+                      <div class="stat">
+                        <h4>Status</h4>
+                        <a-progress
+                          status="active"
+                          type="circle"
+                          :percent="100"
+                          :format="() => 'Verified'"
+                        />
+                      </div>
+                      <div class="stat">
+                        <a-statistic
+                          title="Created On"
+                          :value="moment(poi.createdOn).format('DD MMM YYYY')"
+                          style="margin-right: 50px"
+                        />
+                        <a-statistic
+                          title="Verified On"
+                          :value="moment(poi.verifiedOn).format('DD MMM YYYY')"
+                        />
+                      </div>
+                      <div class="stat">
+                        <a-statistic
+                          title="Block Time"
+                          :value="
+                            poi.initialProof.proof.metadata.blockTime.toString()
+                          "
+                          style="margin-right: 50px"
+                        />
+                      </div>
+                      <div class="stat">
+                        <h4>Confidence</h4>
+                        <a-progress
+                          status="active"
+                          type="circle"
+                          :stroke-color="{
+                            '0%': '#108ee9',
+                            '100%': '#87d068',
+                          }"
+                          :percent="
+                            Number.parseFloat(
+                              poi.verification.verifiedConfidence * 100
+                            ).toFixed(2)
+                          "
+                        />
+                      </div>
+                      <div class="stat">
+                        <a-statistic
+                          title="Anchored On"
+                          :value="poi.blockchain"
+                          style="margin-right: 50px"
+                        />
+                      </div>
+                      <div class="stat">
+                        <a-statistic
+                          title="Found On Line"
+                          :value="poi.verification.lineFound + 1"
+                          style="margin-right: 50px"
+                        />
+                        <a-statistic
+                          title="Word"
+                          :value="poi.verification.wordFound + 1"
+                        />
+                      </div>
+                      <div class="stat">
+                        <a-statistic
+                          title="Name"
+                          :value="poi.name"
+                          style="margin-right: 50px"
+                        />
+                        <a-statistic title="Email" :value="poi.email" />
+                      </div>
+                    </div>
+                  </a-tab-pane>
 
-              <a-tabs default-active-key="1" tab-position="top">
-                <a-tab-pane key="1" tab="Info">
-                  <div class="stats">
-                    <div class="stat">
-                      <p class="ant-statistic-title">Status</p>
-                      <a-progress
-                        status="active"
-                        type="circle"
-                        :percent="100"
-                        :format="() => 'Verified'"
-                      />
-                    </div>
-                    <div class="stat">
-                      <a-statistic
-                        title="Created On"
-                        :value="moment(hole.createdOn).format('DD MMM YYYY')"
-                        style="margin-right: 50px"
-                      />
-                    </div>
-                    <div class="stat">
-                      <a-statistic
-                        title="Course"
-                        :value="hole.courseName"
-                        style="margin-right: 50px"
-                      />
-                      <a-statistic :value="hole.state" />
-                      <a-statistic :value="hole.suburb" />
-                    </div>
-                    <div class="stat">
-                      <a-statistic
-                        title="Hole Number"
-                        :value="hole.holeNumber"
-                        style="margin-right: 50px"
-                      />
-                      <a-statistic
-                        v-if="hole && hole.holeDescription"
-                        :value="hole.holeDescription"
-                      />
-                    </div>
-                    <div class="stat">
-                      <a-statistic
-                        title="Course Par"
-                        :value="hole.coursePar"
-                        style="margin-right: 50px"
-                      />
-                      <a-statistic
-                        title="Hole Par"
-                        :value="hole.holePar"
-                        style="margin-right: 50px"
-                      />
-                    </div>
-                    <div class="stat">
-                      <p class="ant-statistic-title">View NFT</p>
-                      <a
-                        target="__blank"
-                        :href="hole && hole.token && hole.token.tokenLink"
-                        >{{ hole && hole.token && hole.token.tokenLink }}</a
+                  <a-tab-pane key="2" tab="Certificate">
+                    <div class="iframeContainer">
+                      <object
+                        :data="`/api/certificate/${code}`"
+                        type="application/pdf"
+>>>>>>> parent of 359d9d1 (Tokenization first cut:):pages/verify/index.vue
                       >
+                        <embed
+                          :src="`/api/certificate/${code}`"
+                          type="application/pdf"
+                        />
+                      </object>
                     </div>
-                  </div>
-                </a-tab-pane>
-
-                <a-tab-pane key="3" tab="JSON">
-                  <VueJsonPretty
-                    :deep="2"
-                    :data="hole"
-                    show-length
-                  ></VueJsonPretty
-                ></a-tab-pane>
-                <a-tab-pane key="4" tab="NFT">
-                  <VueJsonPretty :data="hole.token" show-length></VueJsonPretty
-                ></a-tab-pane>
-              </a-tabs>
+                  </a-tab-pane>
+                  <a-tab-pane key="3" tab="JSON">
+                    <VueJsonPretty
+                      :deep="2"
+                      :data="poi"
+                      show-length
+                    ></VueJsonPretty
+                  ></a-tab-pane>
+                </a-tabs>
+              </div>
+>>>>>>> parent of 359d9d1 (Tokenization first cut:):pages/verify/index.vue
             </div>
           </template>
         </a-result>
@@ -471,7 +497,7 @@ h2 {
   flex-wrap: wrap;
   -ms-flex-pack: distribute;
   justify-content: space-around;
-  // background-color: white;
+  background-color: white;
   border-radius: 0.75em;
   padding-top: 10px;
   padding-bottom: 20px;
@@ -485,17 +511,9 @@ h2 {
   padding-bottom: 20px;
 }
 .stat {
-  min-width: 22vw;
-  padding: 10px;
-  background-color: white;
-  border-radius: 0.75em;
   margin-left: 30px;
   margin-right: 30px;
   margin-top: 20px;
-  display: flex;
-  flex-direction: column;
-  justify-content: center;
-  align-items: center;
 }
 .ant-statistic {
   display: -webkit-box;
@@ -531,12 +549,7 @@ p {
   -ms-flex-pack: start;
   justify-content: flex-start;
 }
-.about {
-  display: flex;
-  flex-direction: column;
-  margin-top: 20px;
-  margin-bottom: 40px;
-}
+
 img {
   border-radius: 0.75em;
   max-height: 75vh;

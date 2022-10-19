@@ -34,6 +34,13 @@ async function init() {
     message: 'Creating connection to MongoDB...',
     DB,
     URI,
+    LOOP_TIMER: process.env.PROVE_YOURSELF_LOOP_INTERVAL,
+    SDK_INSECURE: process.env.PROVENDB_SDK_INSECURE,
+    SDK_AWAIT: (process.env.PROVENDB_SDK_AWAIT === 'true' && true) || false,
+    SDK_SKIP: process.env.PROVENDB_SDK_SKIP,
+    SDK_ENDPOINT: process.env.PROVENDB_SDK_ENDPOINT,
+    SDK_ANCHOR:
+      process.env.PROVENDB_SDK_ANCHOR || anchor.Anchor.Type.HEDERA_MAINNET,
   })
   try {
     await client.connect()
